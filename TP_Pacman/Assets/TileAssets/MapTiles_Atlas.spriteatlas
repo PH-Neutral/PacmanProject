@@ -1,0 +1,102 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!687078895 &4343727234628468602
+SpriteAtlas:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: MapTiles_Atlas
+  m_EditorData:
+    serializedVersion: 2
+    textureSettings:
+      serializedVersion: 2
+      anisoLevel: 1
+      compressionQuality: 50
+      maxTextureSize: 2048
+      textureCompression: 0
+      filterMode: 0
+      generateMipMaps: 0
+      readable: 0
+      crunchedCompression: 0
+      sRGB: 1
+    platformSettings: []
+    packingSettings:
+      serializedVersion: 2
+      padding: 4
+      blockOffset: 1
+      allowAlphaSplitting: 0
+      enableRotation: 1
+      enableTightPacking: 1
+    variantMultiplier: 1
+    packables:
+    - {fileID: 2800000, guid: 124263a51908a1e42a3b9b1c0757c9dc, type: 3}
+    totalSpriteSurfaceArea: 31744
+    bindAsDefault: 1
+  m_MasterAtlas: {fileID: 0}
+  m_PackedSprites:
+  - {fileID: -8037038614386286928, guid: 124263a51908a1e42a3b9b1c0757c9dc, type: 3}
+  - {fileID: 9117485689632166668, guid: 124263a51908a1e42a3b9b1c0757c9dc, type: 3}
+  - {fileID: 2141108253272865367, guid: 124263a51908a1e42a3b9b1c0757c9dc, type: 3}
+  - {fileID: 3452353421007445580, guid: 124263a51908a1e42a3b9b1c0757c9dc, type: 3}
+  - {fileID: -7554454318633484346, guid: 124263a51908a1e42a3b9b1c0757c9dc, type: 3}
+  - {fileID: -6394753495982092229, guid: 124263a51908a1e42a3b9b1c0757c9dc, type: 3}
+  - {fileID: 2112613767950331651, guid: 124263a51908a1e42a3b9b1c0757c9dc, type: 3}
+  - {fileID: 3928223121921475682, guid: 124263a51908a1e42a3b9b1c0757c9dc, type: 3}
+  - {fileID: -5990802558028496414, guid: 124263a51908a1e42a3b9b1c0757c9dc, type: 3}
+  - {fileID: 6675440080316406268, guid: 124263a51908a1e42a3b9b1c0757c9dc, type: 3}
+  - {fileID: -7253354900111299872, guid: 124263a51908a1e42a3b9b1c0757c9dc, type: 3}
+  - {fileID: -5743662869293993920, guid: 124263a51908a1e42a3b9b1c0757c9dc, type: 3}
+  - {fileID: 5501864490623204350, guid: 124263a51908a1e42a3b9b1c0757c9dc, type: 3}
+  - {fileID: 7979363649585175335, guid: 124263a51908a1e42a3b9b1c0757c9dc, type: 3}
+  - {fileID: 1444948574121418681, guid: 124263a51908a1e42a3b9b1c0757c9dc, type: 3}
+  - {fileID: -958106496702945962, guid: 124263a51908a1e42a3b9b1c0757c9dc, type: 3}
+  - {fileID: -4691710444352634094, guid: 124263a51908a1e42a3b9b1c0757c9dc, type: 3}
+  - {fileID: 2760562613649979443, guid: 124263a51908a1e42a3b9b1c0757c9dc, type: 3}
+  - {fileID: -3707182082714906096, guid: 124263a51908a1e42a3b9b1c0757c9dc, type: 3}
+  - {fileID: -362435743895141937, guid: 124263a51908a1e42a3b9b1c0757c9dc, type: 3}
+  - {fileID: 1656328682799862189, guid: 124263a51908a1e42a3b9b1c0757c9dc, type: 3}
+  - {fileID: -6607939845945826315, guid: 124263a51908a1e42a3b9b1c0757c9dc, type: 3}
+  - {fileID: 3734334735114235337, guid: 124263a51908a1e42a3b9b1c0757c9dc, type: 3}
+  - {fileID: 4754380150030976825, guid: 124263a51908a1e42a3b9b1c0757c9dc, type: 3}
+  - {fileID: -1413350958807271883, guid: 124263a51908a1e42a3b9b1c0757c9dc, type: 3}
+  - {fileID: -4998351287075533433, guid: 124263a51908a1e42a3b9b1c0757c9dc, type: 3}
+  - {fileID: -3914904330545802375, guid: 124263a51908a1e42a3b9b1c0757c9dc, type: 3}
+  - {fileID: -6037430218919136120, guid: 124263a51908a1e42a3b9b1c0757c9dc, type: 3}
+  - {fileID: 5383819677603173883, guid: 124263a51908a1e42a3b9b1c0757c9dc, type: 3}
+  - {fileID: -1895943256315288571, guid: 124263a51908a1e42a3b9b1c0757c9dc, type: 3}
+  - {fileID: -3817294077770381767, guid: 124263a51908a1e42a3b9b1c0757c9dc, type: 3}
+  m_PackedSpriteNamesToIndex:
+  - MapTiles_v3_5
+  - MapTiles_v3_4
+  - MapTiles_v3_7
+  - MapTiles_v3_6
+  - MapTiles_v3_1
+  - MapTiles_v3_0
+  - MapTiles_v3_3
+  - MapTiles_v3_2
+  - MapTiles_v3_9
+  - MapTiles_v3_8
+  - MapTiles_v3_30
+  - MapTiles_v3_25
+  - MapTiles_v3_24
+  - MapTiles_v3_27
+  - MapTiles_v3_26
+  - MapTiles_v3_21
+  - MapTiles_v3_20
+  - MapTiles_v3_23
+  - MapTiles_v3_22
+  - MapTiles_v3_29
+  - MapTiles_v3_28
+  - MapTiles_v3_18
+  - MapTiles_v3_19
+  - MapTiles_v3_14
+  - MapTiles_v3_15
+  - MapTiles_v3_16
+  - MapTiles_v3_17
+  - MapTiles_v3_10
+  - MapTiles_v3_11
+  - MapTiles_v3_12
+  - MapTiles_v3_13
+  m_Tag: MapTiles_Atlas
+  m_IsVariant: 0
