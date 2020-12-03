@@ -64,11 +64,13 @@ public class Maze : MonoBehaviour {
         foreach(Node n in grid.Values) {
             Node[] neighbors = n.Neighbors.ToArray();
             if (neighbors.Length == 2) {
-                uselessNodes.Add(n);
-                int index0 = neighbors[0].Neighbors.IndexOf(n);
-                neighbors[0].Neighbors[index0] = neighbors[1];
-                int index1 = neighbors[1].Neighbors.IndexOf(n);
-                neighbors[1].Neighbors[index1] = neighbors[0];
+                //if (neighbors[0] == ) {
+                    uselessNodes.Add(n);
+                    int index0 = neighbors[0].Neighbors.IndexOf(n);
+                    neighbors[0].Neighbors[index0] = neighbors[1];
+                    int index1 = neighbors[1].Neighbors.IndexOf(n);
+                    neighbors[1].Neighbors[index1] = neighbors[0];
+                //}
             }
         }
         foreach(Node n in uselessNodes) {
