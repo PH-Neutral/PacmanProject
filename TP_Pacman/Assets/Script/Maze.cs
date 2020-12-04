@@ -5,14 +5,19 @@ using UnityEngine;
 using UnityEngine.Tilemaps;
 
 public class Maze : MonoBehaviour {
-    const int X_MIN = 0, X_MAX = 40, Y_MIN = 0, Y_MAX = 40;
-    const float POS_OFFSET = 0.5f, MAP_SCALE = 0.32f;
 
     public static Maze Instance = null;
 
-    [SerializeField] GameObject prefabMarker = null;
-    Dictionary<Vector2Int, Node> grid;
-    Transform goDebug;
+    public Vector3 MapScale {
+        get { return pathGrid.cellSize; }
+    }
+
+    [SerializeField] Item prefabMarker = null;
+    [SerializeField] Item prefabBall = null, prefabBonus = null;
+    Dictionary<Vector2Int, Node> gridNodes = new Dictionary<Vector2Int, Node>();
+    Dictionary<Vector2Int, Item> gridItems = new Dictionary<Vector2Int, Item>();
+
+    Grid pathGrid, frameGrid;
 
     private void Awake() {
         if (Instance == null) {
@@ -21,55 +26,76 @@ public class Maze : MonoBehaviour {
             Destroy(gameObject);
         }
 
-        goDebug = transform.GetChild(transform.childCount - 1);
+        pathGrid = GameObject.Find("Grid_background").GetComponent<Grid>();
+        frameGrid = GameObject.Find("Grid_foreground").GetComponent<Grid>();
+
+        InitializeGraph();
+        SpawnItems(prefabBonus);
+        SpawnItems(prefabBall);
+
+        AdaptCamera();
     }
 
     private void Start() {
-        InitializeGrid();
-        IdentifyNodes();
     }
 
-    void InitializeGrid() {
-        grid = new Dictionary<Vector2Int, Node>();
+    void InitializeGraph() {
         // +++ Generate Nodes +++ //
-        Tilemap map = GameObject.Find("Tilemap_background").GetComponent<Tilemap>();
-        for(int x = X_MIN; x <= X_MAX; x++) {
-            for(int y = Y_MIN; y <= Y_MAX; y++) {
+        Tilemap pathMap = pathGrid.GetComponentInChildren<Tilemap>(); // recover the tilemap
+        pathMap.CompressBounds(); // get rid of empty rows and columns in the cellBounds
+        BoundsInt bounds = pathMap.cellBounds;
+        // iterate over the tilemap from the bottom left corner to the top right corner
+        for(int x = bounds.xMin; x < bounds.xMax; x++) {
+            for(int y = bounds.yMin; y < bounds.yMax; y++) {
                 Vector3Int gridPos = new Vector3Int(x, y, 0);
-                try {
-                    TileBase tile = map.GetTile(gridPos);
-                    if(tile != null) {
-                        Vector2Int coord = new Vector2Int(gridPos.x, gridPos.y);
-                        grid[coord] = new Node("Node " + coord.ToString(), coord);
-                        // DEBUG
-                        //GameObject marker = Instantiate(prefabMarker, GetWorldPositionFromGrid(gridPos), Quaternion.identity, goDebug);
-                        //marker.name += " (" + x + "," + y + ")";
-                    }
-                } catch(Exception e) {
-                    //Debug.LogWarning("Exception caught: " + e.Message);
+                if(pathMap.GetTile(gridPos) != null) {
+                    // if there is a tile at these coordinates, create a node for it and add it to the appropriate dictionary
+                    Vector2Int coord = new Vector2Int(gridPos.x, gridPos.y);
+                    gridNodes[coord] = new Node(coord);
                 }
             }
         }
 
         // +++ Link Nodes +++ //
+        List<NodeTunnel> nodeTunnels = new List<NodeTunnel>();
+        // prepare an array of the relative coordinates of adjacent nodes
         Vector2Int[] deltaCoords = new Vector2Int[4];
         deltaCoords[0] = Vector2Int.left;
         deltaCoords[1] = Vector2Int.right;
         deltaCoords[2] = Vector2Int.down;
         deltaCoords[3] = Vector2Int.up;
-        foreach(Vector2Int coord in grid.Keys) {
-            Node n = grid[coord];
+        // iterate over every node in the dictionary
+        foreach(Vector2Int coord in gridNodes.Keys) {
+            Node n = gridNodes[coord];
+            // iterate over every adjacent node
             foreach (Vector2Int deltaCoord in deltaCoords) {
                 Vector2Int c = coord + deltaCoord;
-                if(grid.ContainsKey(c)) {
-                    n.Neighbors.Add(grid[c]);
+                if(gridNodes.ContainsKey(c)) {
+                    // if the neighboring node exists at these coordinates, link it as a neighbor of the node
+                    n.Neighbors.Add(gridNodes[c]);
+                }
+            }
+            if (n.IsTunnel) {
+                // if the node is a tunnel (only 1 neighbor) replace it to reflect it
+                n = new NodeTunnel(n);
+                nodeTunnels.Add(n as NodeTunnel);
+            }
+        }
+        // iterate over every tunnel node and compare it with every other tunnel nodes
+        foreach(NodeTunnel n1 in nodeTunnels) {
+            gridNodes[n1.Coordinate] = n1;
+            foreach(NodeTunnel n2 in nodeTunnels) {
+                if (n2.LinkedNode == null && (n1.Coordinate.x == n2.Coordinate.x ^ n1.Coordinate.y == n2.Coordinate.y)) {
+                    // if the other tunnel node has not yet been linked and is on the same line xor column, link them
+                    n1.LinkedNode = n2;
+                    n2.LinkedNode = n1;
                 }
             }
         }
 
         // +++ Clean Graph +++ //
         List<Node> uselessNodes = new List<Node>();
-        foreach(Node n in grid.Values) {
+        foreach(Node n in gridNodes.Values) {
             Node[] neighbors = n.Neighbors.ToArray();
             if(n.IsHallway) {
                 uselessNodes.Add(n);
@@ -80,21 +106,31 @@ public class Maze : MonoBehaviour {
             }
         }
         foreach(Node n in uselessNodes) {
-            grid[n.Coordinate] = null;
+            gridNodes[n.Coordinate] = null;
         }
     }
 
-    void IdentifyNodes() {
-        foreach(Vector2Int coord in grid.Keys) {
-            GameObject marker = Instantiate(prefabMarker, GetWorldPositionFromGrid(coord), Quaternion.identity, goDebug);
-            if (grid[coord] != null){
-                marker.name = grid[coord].Name;
+    void SpawnItems(Item prefabItem) {
+        if (prefabItem == null) { return; }
+        GameObject pool = new GameObject(prefabItem.name + " Pool");
+        pool.transform.SetParent(transform);
+        foreach(Vector2Int coord in gridNodes.Keys) {
+            if (!gridItems.ContainsKey(coord)) {
+                if (gridNodes[coord] == null || (gridNodes[coord] != null && !gridNodes[coord].IsTunnel)) {
+                    SpawnItem(prefabItem, coord, pool.transform);
+                }
             }
         }
     }
 
+    void SpawnItem(Item prefabItem, Vector2Int coord, Transform pool) {
+        Item item = Instantiate(prefabItem, GetWorldPositionFromGrid(coord), Quaternion.identity, pool);
+        item.name = prefabItem.name + " " + coord.ToString();
+        gridItems[coord] = item;
+    }
+
     public NodeType GetCellType(Vector2Int coordinate) {
-        if(grid.TryGetValue(coordinate, out Node node)) {
+        if(gridNodes.TryGetValue(coordinate, out Node node)) {
             if(node == null) { return NodeType.Hallway; }
             if(node.IsTunnel) { return NodeType.Tunnel; }
             if(node.IsCrossroad) { return NodeType.Crossroad; }
@@ -103,12 +139,33 @@ public class Maze : MonoBehaviour {
         return NodeType.None;
     }
 
-    public static Vector3 GetWorldPositionFromGrid(Vector2Int gridPosition) {
-        return new Vector3(gridPosition.x + POS_OFFSET, gridPosition.y + POS_OFFSET) * MAP_SCALE;
+    public Node GetCell(Vector2Int coordinate) {
+        return gridNodes[coordinate];
+    }
+
+    public Vector3 GetWorldPositionFromGrid(Vector2Int gridPosition) {
+        return new Vector3((gridPosition.x + 0.5f) * MapScale.x, (gridPosition.y + 0.5f) * MapScale.y) + transform.position;
     }
     
-    public static Vector2Int GetGridCoordFromPosition(Vector3 worldPosition) {
-        return new Vector2Int((int)(worldPosition.x / MAP_SCALE), (int)(worldPosition.y / MAP_SCALE));
+    public Vector2Int GetGridCoordFromPosition(Vector3 worldPosition) {
+        worldPosition -= transform.position;
+        return new Vector2Int(Mathf.FloorToInt(worldPosition.x / MapScale.x), Mathf.FloorToInt(worldPosition.y / MapScale.y));
+    }
+
+    void AdaptCamera() {
+        Tilemap map = frameGrid.GetComponentInChildren<Tilemap>();
+        map.CompressBounds();
+        BoundsInt bounds = map.cellBounds;
+        //Vector3 xMin = GetWorldPositionFromGrid(new Vector2Int(bounds.xMin, 0));
+        Vector3 xMax = GetWorldPositionFromGrid(new Vector2Int(bounds.xMax, 0));
+        Vector3 yMin = GetWorldPositionFromGrid(new Vector2Int(0, bounds.yMin));
+        Vector3 yMax = GetWorldPositionFromGrid(new Vector2Int(0, bounds.yMax));
+        Vector3 newPos = Vector3.Lerp(xMax, yMax, 0.5f);
+        newPos.x -= frameGrid.cellSize.x * 0.5f;
+        newPos.y -= frameGrid.cellSize.y * 0.5f;
+        newPos.z = Camera.main.transform.position.z;
+        Camera.main.transform.position = newPos;
+        Camera.main.orthographicSize = Vector3.Distance(yMin, yMax) * 0.5f;
     }
 
     /*

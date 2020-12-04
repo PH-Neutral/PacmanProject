@@ -31,14 +31,14 @@ public class Node {
             return Neighbors.Count > 2;
         }
     }
-    public string Name { get; private set; }
-    public Vector2Int Coordinate { get; private set; }
+    public string Name { get; protected set; }
+    public Vector2Int Coordinate { get; protected set; }
     public int Depth { get; set; }
-    public List<Node> Neighbors { get; private set; }
+    public List<Node> Neighbors { get; protected set; }
     public Node Parent { get; set; }
 
-    public Node(string name, Vector2Int coordinate) {
-        Name = name;
+    public Node(Vector2Int coordinate) {
+        Name = "Node " + coordinate.ToString();
         Coordinate = coordinate;
         Depth = -1;
         Neighbors = new List<Node>();
