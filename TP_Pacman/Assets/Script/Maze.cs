@@ -92,11 +92,11 @@ public class Maze : MonoBehaviour {
     }
 
     public NodeType GetCellType(Vector2Int coordinate) {
-        Node node;
-        if (grid.TryGetValue(coordinate, out node)) {
-            if (node.IsTunnel) { return NodeType.Tunnel; }
-            if (node.IsCrossroad) { return NodeType.Crossroad; }
-            if (node.IsHallway) { return NodeType.Hallway; }
+        if(grid.TryGetValue(coordinate, out Node node)) {
+            if(node == null) { return NodeType.Hallway; }
+            if(node.IsTunnel) { return NodeType.Tunnel; }
+            if(node.IsCrossroad) { return NodeType.Crossroad; }
+            if(node.IsCorner) { return NodeType.Corner; }
         }
         return NodeType.None;
     }

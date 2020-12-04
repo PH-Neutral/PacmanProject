@@ -12,7 +12,8 @@ public class Node {
     public bool IsHallway {
         get {
             if (Neighbors.Count == 2) {
-                return (Neighbors[0].Coordinate.x == Neighbors[1].Coordinate.x) || (Neighbors[0].Coordinate.y == Neighbors[1].Coordinate.y);
+                return (Neighbors[0].Coordinate.x == Neighbors[1].Coordinate.x) 
+                    || (Neighbors[0].Coordinate.y == Neighbors[1].Coordinate.y);
                 }
             return false;
         }
