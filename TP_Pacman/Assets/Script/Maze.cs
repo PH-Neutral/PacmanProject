@@ -87,7 +87,9 @@ public class Maze : MonoBehaviour {
     void IdentifyNodes() {
         foreach(Vector2Int coord in grid.Keys) {
             GameObject marker = Instantiate(prefabMarker, GetWorldPositionFromGrid(coord), Quaternion.identity, goDebug);
-            marker.name = grid[coord].Name;
+            if (grid[coord] != null){
+                marker.name = grid[coord].Name;
+            }
         }
     }
 
@@ -101,11 +103,11 @@ public class Maze : MonoBehaviour {
         return NodeType.None;
     }
 
-    static Vector3 GetWorldPositionFromGrid(Vector2Int gridPosition) {
+    public static Vector3 GetWorldPositionFromGrid(Vector2Int gridPosition) {
         return new Vector3(gridPosition.x + POS_OFFSET, gridPosition.y + POS_OFFSET) * MAP_SCALE;
     }
     
-    static Vector2Int GetGridCoordFromPosition(Vector3 worldPosition) {
+    public static Vector2Int GetGridCoordFromPosition(Vector3 worldPosition) {
         return new Vector2Int((int)(worldPosition.x / MAP_SCALE), (int)(worldPosition.y / MAP_SCALE));
     }
 
