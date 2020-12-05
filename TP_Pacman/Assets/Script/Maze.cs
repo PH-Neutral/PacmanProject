@@ -8,6 +8,8 @@ public class Maze : MonoBehaviour {
 
     public static Maze Instance = null;
 
+    static readonly Vector2Int[] _directions = new Vector2Int[4] { Vector2Int.left, Vector2Int.right, Vector2Int.down, Vector2Int.up };
+
     public Vector3 MapScale {
         get { return pathGrid.cellSize; }
     }
@@ -58,27 +60,31 @@ public class Maze : MonoBehaviour {
 
         // +++ Link Nodes +++ //
         List<NodeTunnel> nodeTunnels = new List<NodeTunnel>();
-        // prepare an array of the relative coordinates of adjacent nodes
-        Vector2Int[] deltaCoords = new Vector2Int[4];
-        deltaCoords[0] = Vector2Int.left;
-        deltaCoords[1] = Vector2Int.right;
-        deltaCoords[2] = Vector2Int.down;
-        deltaCoords[3] = Vector2Int.up;
         // iterate over every node in the dictionary
         foreach(Vector2Int coord in gridNodes.Keys) {
             Node n = gridNodes[coord];
             // iterate over every adjacent node
-            foreach (Vector2Int deltaCoord in deltaCoords) {
+            foreach (Vector2Int deltaCoord in _directions) {
                 Vector2Int c = coord + deltaCoord;
                 if(gridNodes.ContainsKey(c)) {
                     // if the neighboring node exists at these coordinates, link it as a neighbor of the node
                     n.Neighbors.Add(gridNodes[c]);
                 }
             }
-            if (n.IsTunnel) {
-                // if the node is a tunnel (only 1 neighbor) replace it to reflect it
+            if (n.Neighbors.Count == 0) {
+                Debug.LogError("Lonely Node found at " + coord.ToString());
+            } else if (n.Neighbors.Count == 1) {
+                // if the node is a tunnel, replace it to reflect it
                 n = new NodeTunnel(n);
                 nodeTunnels.Add(n as NodeTunnel);
+            } else if (n.Neighbors.Count == 2) {
+                if ((n.Neighbors[0].Coordinate.x == n.Neighbors[1].Coordinate.x) || (n.Neighbors[0].Coordinate.y == n.Neighbors[1].Coordinate.y)) {
+                    n.Type = NodeType.Hallway;
+                } else {
+                    n.Type = NodeType.Corner;
+                }
+            } else {
+                n.Type = NodeType.Crossroad;
             }
         }
         // iterate over every tunnel node and compare it with every other tunnel nodes
@@ -87,28 +93,47 @@ public class Maze : MonoBehaviour {
             foreach(NodeTunnel n2 in nodeTunnels) {
                 if (n2.LinkedNode == null && (n1.Coordinate.x == n2.Coordinate.x ^ n1.Coordinate.y == n2.Coordinate.y)) {
                     // if the other tunnel node has not yet been linked and is on the same line xor column, link them
-                    n1.LinkedNode = n2;
-                    n2.LinkedNode = n1;
+                    n1.LinkNode(n2);
                 }
             }
         }
 
-        // +++ Clean Graph +++ //
-        List<Node> uselessNodes = new List<Node>();
+        /*/ +++ Clean Graph +++ //
+        //List<Node> hallwayNodes = new List<Node>();
+        List<Node> extremityNodes = new List<Node>();
+        // iterate over every node and check if they are hallway
         foreach(Node n in gridNodes.Values) {
             Node[] neighbors = n.Neighbors.ToArray();
             if(n.IsHallway) {
-                uselessNodes.Add(n);
+                // if node is hallway, rewire neighbors so that in the end all corner/crossroad/tunnel nodes are only linked to each other
+                //hallwayNodes.Add(n);
                 int index0 = neighbors[0].Neighbors.IndexOf(n);
                 neighbors[0].Neighbors[index0] = neighbors[1];
                 int index1 = neighbors[1].Neighbors.IndexOf(n);
                 neighbors[1].Neighbors[index1] = neighbors[0];
             }
         }
-        foreach(Node n in uselessNodes) {
-            gridNodes[n.Coordinate] = null;
-        }
+        // iterate over every non-hallway
+        foreach(Node n in extremityNodes) {
+            
+        }*/
     }
+    /*List<Node> CleanHallways(Node startNode) {
+        Queue<Node> queue = new Queue<Node>();
+        queue.Enqueue(startNode);
+        startNode.Depth = 0;
+        while(queue.Count > 0) {
+            Node node = queue.Dequeue();
+            foreach(Node n in node.Neighbors) {
+                if(n.Depth < 0) {
+                    queue.Enqueue(n);
+                    n.Depth = node.Depth + 1;
+                }
+                // 
+            }
+        }
+        return null;
+    }*/
 
     void SpawnItems(Item prefabItem) {
         if (prefabItem == null) { return; }
@@ -128,19 +153,126 @@ public class Maze : MonoBehaviour {
         item.name = prefabItem.name + " " + coord.ToString();
         gridItems[coord] = item;
     }
+    public List<Node> GetPath(Vector2Int from, Vector2Int to) {
+        //Debug.Log("from: " + from.ToString() + " to: " + to.ToString());
+        Node startNode = GetNode(from);
+        Node endNode = GetNode(to);
+        Queue<Node> queue = new Queue<Node>();
+        queue.Enqueue(startNode);
+        startNode.Parent = null;
+        startNode.Depth = 0;
 
-    public NodeType GetCellType(Vector2Int coordinate) {
-        if(gridNodes.TryGetValue(coordinate, out Node node)) {
-            if(node == null) { return NodeType.Hallway; }
-            if(node.IsTunnel) { return NodeType.Tunnel; }
-            if(node.IsCrossroad) { return NodeType.Crossroad; }
-            if(node.IsCorner) { return NodeType.Corner; }
+        while(queue.Count > 0) {
+            Node node = queue.Dequeue();
+            foreach(Node n in node.Neighbors) {
+                if(n.Depth < 0) {
+                    queue.Enqueue(n);
+                    n.Depth = node.Depth + 1;
+                    n.Parent = node;
+                    if(n == endNode) {
+                        List<Node> path = GetParentPath(n);
+                        path.RemoveAt(path.Count - 1);
+                        path.Reverse();
+                        return path;
+                    }
+                }
+            }
         }
-        return NodeType.None;
+        return null;
     }
 
-    public Node GetCell(Vector2Int coordinate) {
+    List<Node> GetParentPath(Node node, List<Node> path = null) {
+        if(path == null) { path = new List<Node>(); }
+        if(node == null) {
+            return path;
+        }
+        path.Add(node);
+        return GetParentPath(node.Parent, path);
+    }
+
+    public void UpdatePlayerPosition() {
+        Player player = GameManager.Instance.player;
+        Vector2Int playerCoordinate = GetGridCoordFromPosition(player.transform.position);
+        Vector3 updatedPlayerPos = GetWorldPositionFromGrid(playerCoordinate);
+        // ++ check if player is in tunnel ++ //
+        Node playerNode = Maze.Instance.GetNode(playerCoordinate);
+        if(playerNode != null && playerNode.Type == NodeType.Tunnel) {
+            updatedPlayerPos = Maze.Instance.GetWorldPositionFromGrid((playerNode as NodeTunnel).LinkedNode.Coordinate);
+        }
+        player.transform.position = updatedPlayerPos;
+
+        // ++ check if player collides with an item ++ //
+        Item item;
+        if ((item = GetItem(playerCoordinate)) != null) {
+            // if there is an item at these coords
+            // >>> check what kind of item it is
+            gridItems.Remove(playerCoordinate);
+            Destroy(item.gameObject);
+            player.Score++;
+            GameManager.Instance.RemainingBalls--;
+        }
+    }
+
+    public Vector2Int GetPlayerGridPosition() {
+        return GameManager.Instance.player.Coordinate;
+    }
+
+    /*public Node GetPlayerNode() {
+        Player player = GameManager.Instance.players[0];
+        Node pNode = gridNodes[player.Coordinate]; // get the node at player's coordinate
+        if (pNode != null) { return pNode; } // if a node already exists there, return it
+        pNode = new Node(player.Coordinate); // else, create a new one
+        // check for every direction to find the adjacent nodes
+        foreach(Vector2Int dir in _directions) {
+            Node node;
+            Vector2Int searchPos = player.Coordinate;
+            if (!gridNodes.ContainsKey(searchPos + dir)) { continue; }
+            do {
+                searchPos += dir;
+            } while((node = gridNodes[searchPos]) == null);
+            for (int i = 0; i < )
+            pNode.Neighbors.Add(node);
+        }
+    }*/
+
+    /*public void ChangeNodePosition(Vector2Int lastPos, Vector2Int newPos){
+        Node nodeLast = gridNodes[lastPos];
+        Node nodeNew = gridNodes[newPos];
+        if (nodeNew == null) {
+            // if next cell is hallway
+            if(nodeLast.IsHallway) {
+                // if last cell is also hallway, then just move node to newPos
+                gridNodes[newPos] = nodeLast;
+                gridNodes[lastPos] = null;
+            } else if(nodeLast.IsCrossroad || nodeLast.IsTunnel || nodeLast.IsCorner) {
+                // if last cell has a permanent node, then create new node and relink neighbors
+                // > setup new node
+                Node newNode = new Node(newPos);
+                newNode.Neighbors.Add(nodeLast);
+                Vector2Int searchPos = newPos;
+                Node nextNode;
+                do {
+                    searchPos += newPos - lastPos;
+                } while((nextNode = gridNodes[newPos + searchPos]) == null); // search for next node in hallway
+                newNode.Neighbors.Add(nextNode);
+                // > relink neighbors
+
+            }
+        }
+    }*/
+
+    public Node GetNode(Vector2Int coordinate) {
+        if (!gridNodes.ContainsKey(coordinate)) {
+            return null;
+        }
         return gridNodes[coordinate];
+    }
+
+    public Item GetItem(Vector2Int coordinate) {
+        if (!gridItems.ContainsKey(coordinate)) {
+            return null;
+        }
+        return gridItems[coordinate];
     }
 
     public Vector3 GetWorldPositionFromGrid(Vector2Int gridPosition) {
@@ -168,36 +300,5 @@ public class Maze : MonoBehaviour {
         Camera.main.orthographicSize = Vector3.Distance(yMin, yMax) * 0.5f;
     }
 
-    /*
-static List<Node> GetPath(Node startNode, Node endNode) {
-    Queue<Node> queue = new Queue<Node>();
-    queue.Enqueue(startNode);
-    startNode.Parent = null;
-    startNode.Depth = 0;
-
-    while(queue.Count > 0) {
-        Node node = queue.Dequeue();
-        foreach(Node n in node.Neighbors) {
-            if(n.Depth < 0) {
-                queue.Enqueue(n);
-                n.Depth = node.Depth + 1;
-                n.Parent = node;
-                if(n == endNode) {
-                    return GetParentPath(n);
-                }
-            }
-        }
-    }
-    return null;
-}
-
-static List<Node> GetParentPath(Node node, List<Node> path = null) {
-    if(path == null) { path = new List<Node>(); }
-    if(node == null) {
-        return path;
-    }
-    path.Add(node);
-    return GetParentPath(node.Parent, path);
-}
-*/
+    
 }

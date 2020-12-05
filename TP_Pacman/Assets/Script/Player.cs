@@ -7,62 +7,64 @@ public class Player : MonoBehaviour
     public int Score {
         get; set;
     }
+    public Vector2Int Coordinate {
+        get { return _coordinate; }
+    }
 
-    float timer = 0;
-    float delay = 0.2f;
-    bool moveLock = false;
-    Vector2Int direction = Vector2Int.zero, nextCell;
-    Vector3 startPosition, endPosition;
+    Vector2Int _direction, _coordinate;
+    Vector3 _startPosition, _endPosition;
+    readonly float _delay = 0.2f;
+    float _timer = 0;
+    bool _moveLock = false;
+
     void Start()
     {
-        startPosition = transform.position;
+        GameManager.Instance.player = this;
     }
 
     void Update()
     {
-        float inputHorizontal = Input.GetAxis("Horizontal");
-        float inputVertical = Input.GetAxis("Vertical");
-        Vector2Int inputs = new Vector2Int(Mathf.RoundToInt(inputHorizontal), Mathf.RoundToInt(inputVertical));
-        Vector2Int pCoord = Maze.Instance.GetGridCoordFromPosition(transform.position);
-        if (inputs != Vector2Int.zero && Maze.Instance.GetCellType(pCoord + inputs) != NodeType.None)
-        {
-            direction = inputs;
+        Vector2Int inputs = GetInputs();
+        if(!_moveLock) {
+            _coordinate = Maze.Instance.GetGridCoordFromPosition(transform.position);
         }
-        if (!moveLock) {
-            nextCell = pCoord + direction;
+        if(inputs != Vector2Int.zero && Maze.Instance.GetNode(_coordinate + inputs) != null) {
+            _direction = inputs;
         }
-        NodeType type = Maze.Instance.GetCellType(nextCell);
-        if (type == NodeType.None)
+        Vector2Int nextNode = _coordinate + _direction;
+        if (Maze.Instance.GetNode(nextNode) == null)
         {
-            direction = Vector2Int.zero;
+            _direction = Vector2Int.zero;
         }
         //Debug.Log("type: " + type + " inputs: " + inputs + " pCoords: " + pCoord);
 
-        if(direction != Vector2Int.zero && !moveLock) {
-            endPosition = Maze.Instance.GetWorldPositionFromGrid(nextCell);
-            startPosition = transform.position;
-            moveLock = true;
+        if(_direction != Vector2Int.zero && !_moveLock) {
+            _startPosition = transform.position;
+            _endPosition = Maze.Instance.GetWorldPositionFromGrid(nextNode);
+            _moveLock = true;
         }
 
-        if (moveLock)
+        if (_moveLock)
         {
-            timer += Time.deltaTime;
-            if (timer >= delay)
-            {
-                timer -= delay;
-                moveLock = false;
-                Vector2Int targetCoord;
-                if(Maze.Instance.GetCellType(targetCoord = Maze.Instance.GetGridCoordFromPosition(endPosition)) == NodeType.Tunnel) {
-                    NodeTunnel tNode = Maze.Instance.GetCell(targetCoord) as NodeTunnel;
-                    Debug.Log("Node is " + (tNode == null ? "NOT " : "") + "a tunnel.");
-                    endPosition = Maze.Instance.GetWorldPositionFromGrid(tNode.LinkedNode.Coordinate);
-                }
-                transform.position = endPosition;
-            }
-            else
-            {
-                transform.position = Vector3.Lerp(startPosition, endPosition, timer / delay);
-            }
+            LinearMovementUpdate();
+        }
+    }
+
+    Vector2Int GetInputs() {
+        float inputHorizontal = Input.GetAxis("Horizontal");
+        float inputVertical = Input.GetAxis("Vertical");
+        return new Vector2Int(Mathf.RoundToInt(inputHorizontal), Mathf.RoundToInt(inputVertical));
+    }
+
+    void LinearMovementUpdate() {
+        _timer += Time.deltaTime;
+        if(_timer >= _delay) {
+            _timer -= _delay;
+            _moveLock = false;
+            Maze.Instance.UpdatePlayerPosition();
+            
+        } else {
+            transform.position = Vector3.Lerp(_startPosition, _endPosition, _timer / _delay);
         }
     }
 }
