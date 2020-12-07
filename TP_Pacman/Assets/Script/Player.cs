@@ -2,73 +2,33 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Player : MonoBehaviour
+public class Player : Character
 {
     public int Score {
         get; set;
     }
-    public Vector2Int Coordinate {
-        get { return _coordinate; }
-    }
 
-    Vector2Int _direction, _coordinate;
-    Vector3 _startPosition, _endPosition;
-    readonly float _delay = 0.2f;
-    float _timer = 0;
-    bool _moveLock = false;
-
-    void Start()
-    {
-        GameManager.Instance.player = this;
-    }
-
-    void Update()
-    {
-        Vector2Int inputs = GetInputs();
-        if(!_moveLock) {
-            _coordinate = Maze.Instance.GetGridCoordFromPosition(transform.position);
-        }
-        if (inputs.x != 0 && inputs.y != 0)
-        {
-            inputs.y = 0;
-        }
-        if(inputs != Vector2Int.zero && Maze.Instance.GetNode(_coordinate + inputs) != null) {
-            _direction = inputs;
-        }
-        Vector2Int nextNode = _coordinate + _direction;
-        if (Maze.Instance.GetNode(nextNode) == null)
-        {
-            _direction = Vector2Int.zero;
-        }
-        //Debug.Log("type: " + type + " inputs: " + inputs + " pCoords: " + pCoord);
-
-        if(_direction != Vector2Int.zero && !_moveLock) {
-            _startPosition = transform.position;
-            _endPosition = Maze.Instance.GetWorldPositionFromGrid(nextNode);
-            _moveLock = true;
-        }
-
-        if (_moveLock)
-        {
-            LinearMovementUpdate();
-        }
-    }
-
-    Vector2Int GetInputs() {
+    Vector2Int GetMoveInputs() {
         float inputHorizontal = Input.GetAxis("Horizontal");
         float inputVertical = Input.GetAxis("Vertical");
-        return new Vector2Int(Mathf.RoundToInt(inputHorizontal), Mathf.RoundToInt(inputVertical));
+        Vector2Int inputs = new Vector2Int(Mathf.RoundToInt(inputHorizontal), Mathf.RoundToInt(inputVertical));
+        if(inputs.x != 0 && inputs.y != 0) {
+            inputs.y = 0;
+        }
+        return inputs;
     }
 
-    void LinearMovementUpdate() {
-        _timer += Time.deltaTime;
-        if(_timer >= _delay) {
-            _timer -= _delay;
-            _moveLock = false;
-            Maze.Instance.UpdatePlayerPosition();
-            
-        } else {
-            transform.position = Vector3.Lerp(_startPosition, _endPosition, _timer / _delay);
+    protected override void ChooseDirection() {
+        //Debug.Log(name + " is on " + Coordinate.ToString() + " and the node is " + (Maze.Instance.GetNode(Coordinate) == null ? "" : "NOT ") + "null");
+        Maze maze = Maze.Instance;
+        Vector2Int inputs = GetMoveInputs(); // get the player inputs related to movement
+        if(inputs != Vector2Int.zero && maze.GetNode(Coordinate).HasNeighbor(inputs)) {
+            // if player is pressing a move key and there is a cell in this direction, choose this direction
+            Direction = inputs;
         }
+        if (!maze.GetNode(Coordinate).HasNeighbor(Direction)) {
+            Direction = Vector2Int.zero;
+        }
+        //Debug.Log("Direction prepared! New: " + Direction.ToString() + " based on inputs: " + inputs.ToString());
     }
 }

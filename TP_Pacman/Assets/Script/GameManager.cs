@@ -6,6 +6,7 @@ public class GameManager : MonoBehaviour {
     public static GameManager Instance = null;
 
     public Player player;
+    public List<Ghost> ghosts;
 
     public int RemainingBalls {
         get; set;
@@ -20,6 +21,13 @@ public class GameManager : MonoBehaviour {
     }
 
     private void Start() {
-        
+        /*for (int i=0; i<4; i++) {
+            Ghost ghost = Instantiate(prefabGhost)
+            ghosts.Add()
+        }*/
+        foreach(Ghost g in ghosts) {
+            g.target = player;
+            Debug.Log("Ghosts targets assigned!");
+        }
     }
 }

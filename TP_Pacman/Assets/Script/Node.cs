@@ -3,34 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class Node {
-
-    public bool IsTunnel {
-        get {
-            return Neighbors.Count == 1;
-        }
-    }
-    public bool IsHallway {
-        get {
-            if(Neighbors.Count == 2) {
-                return (Neighbors[0].Coordinate.x == Neighbors[1].Coordinate.x)
-                    || (Neighbors[0].Coordinate.y == Neighbors[1].Coordinate.y);
-            }
-            return false;
-        }
-    }
-    public bool IsCorner {
-        get {
-            if(Neighbors.Count == 2) {
-                return !IsHallway;
-            }
-            return false;
-        }
-    }
-    public bool IsCrossroad {
-        get {
-            return Neighbors.Count > 2;
-        }
-    }
     public string Name { get; protected set; }
     public NodeType Type { get; set; }
     public Vector2Int Coordinate { get; protected set; }
@@ -44,6 +16,29 @@ public class Node {
         Depth = -1;
         Neighbors = new List<Node>();
         Parent = null;
+    }
+
+    public bool HasNeighbor(Vector2Int relativeCoordinate) {
+        return GetNeighbor(relativeCoordinate) != null;
+    }
+
+    public virtual Node GetNeighbor(Vector2Int relativeCoordinate) {
+        if (relativeCoordinate == Vector2Int.zero) { return null; }
+        foreach(Node n in Neighbors) {
+            if (n.Coordinate == this.Coordinate + relativeCoordinate) {
+                return n;
+            }
+        }
+        return null;
+    }
+
+    public void Clean() {
+        Depth = -1;
+        Parent = null;
+    }
+
+    public override string ToString() {
+        return "Node at " + Coordinate.ToString() + " of type " + Type + " with " + Neighbors.Count + " neighbors. [Depth = " + Depth + "; Parent = " + (Parent != null ? Parent.Name : "NULL") + "]";
     }
 }
 

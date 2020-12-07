@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class NodeTunnel : Node {
-    public Node LinkedNode { get; private set; }
+    public NodeTunnel LinkedTunnel { get; private set; }
 
     public NodeTunnel(Vector2Int coordinate) : base(coordinate) {}
     public NodeTunnel(Node node) : base(node.Coordinate) {
@@ -11,14 +11,25 @@ public class NodeTunnel : Node {
         Neighbors = node.Neighbors;
         Depth = node.Depth;
         Parent = node.Parent;
-        LinkedNode = null;
+        LinkedTunnel = null;
     }
 
-    public void LinkNode(NodeTunnel node, bool linkBoth = true) {
-        LinkedNode = node;
+    public void LinkTunnel(NodeTunnel node, bool linkBoth = true) {
+        LinkedTunnel = node;
         Neighbors.Add(node);
         if (linkBoth) {
-            node.LinkNode(this, false);
+            node.LinkTunnel(this, false);
         }
+    }
+
+    public override Node GetNeighbor(Vector2Int relativeCoordinate) {
+        //return base.GetNeighbor(relativeCoordinate);
+        Node neighbor = base.GetNeighbor(relativeCoordinate);
+        Vector2Int searchCoord = Coordinate + relativeCoordinate;
+        if (neighbor == null && searchCoord.y == LinkedTunnel.Coordinate.y 
+            && Mathf.Abs(searchCoord.x - LinkedTunnel.Coordinate.x) > Mathf.Abs(Coordinate.x - LinkedTunnel.Coordinate.x)) {
+            return LinkedTunnel;
+        }
+        return neighbor;
     }
 }
