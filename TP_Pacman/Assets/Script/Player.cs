@@ -28,6 +28,10 @@ public class Player : MonoBehaviour
         if(!_moveLock) {
             _coordinate = Maze.Instance.GetGridCoordFromPosition(transform.position);
         }
+        if (inputs.x != 0 && inputs.y != 0)
+        {
+            inputs.y = 0;
+        }
         if(inputs != Vector2Int.zero && Maze.Instance.GetNode(_coordinate + inputs) != null) {
             _direction = inputs;
         }

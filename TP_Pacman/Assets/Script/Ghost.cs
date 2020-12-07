@@ -9,15 +9,29 @@ public class Ghost : MonoBehaviour {
     readonly float _delay = 0.2f;
     float _timer = 0f;
 
+    Vector3 _startPosition, _endPosition;
+
+    private void Start()
+    {
+        _timer = _delay;
+    }
     private void Update() {
-        Maze maze = Maze.Instance;
-        Vector2Int selfCoordinate = maze.GetGridCoordFromPosition(transform.position);
-        Vector2Int playerCoordinate = maze.GetPlayerGridPosition();
         _timer += Time.deltaTime;
-        if (_timer >= _delay) {
+        if (_timer >= _delay)
+        {
             _timer -= _delay;
-            // calculate path every 0.2f seconds
+            Maze maze = Maze.Instance;
+            Vector2Int selfCoordinate = maze.GetGridCoordFromPosition(transform.position);
+            Vector2Int playerCoordinate = maze.GetPlayerGridPosition();
             path = maze.GetPath(selfCoordinate, playerCoordinate);
+            Debug.Log("path lenght " + path.Count);
+            _startPosition = transform.position = maze.GetWorldPositionFromGrid(selfCoordinate);
+            _endPosition = Maze.Instance.GetWorldPositionFromGrid(path[0].Coordinate);
+            //Maze.Instance.UpdatePlayerPosition();
+        }
+        else
+        {
+            transform.position = Vector3.Lerp(_startPosition, _endPosition, _timer / _delay);
         }
     }
 }
