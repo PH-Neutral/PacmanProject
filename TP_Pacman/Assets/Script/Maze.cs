@@ -8,11 +8,7 @@ public class Maze : MonoBehaviour {
 
     public static Maze Instance = null;
 
-    static readonly Vector2Int[] _directions = new Vector2Int[4] { Vector2Int.left, Vector2Int.right, Vector2Int.down, Vector2Int.up };
-
-    public Vector3 MapScale {
-        get { return pathGrid.cellSize; }
-    }
+    static readonly Vector2Int[] directions = new Vector2Int[4] { Vector2Int.left, Vector2Int.right, Vector2Int.down, Vector2Int.up };
 
     [SerializeField] Item prefabMarker = null;
     [SerializeField] Item prefabBall = null, prefabBonus = null;
@@ -64,7 +60,7 @@ public class Maze : MonoBehaviour {
         foreach(Vector2Int coord in gridNodes.Keys) {
             Node n = gridNodes[coord];
             // iterate over every adjacent node
-            foreach (Vector2Int deltaCoord in _directions) {
+            foreach (Vector2Int deltaCoord in directions) {
                 Vector2Int c = coord + deltaCoord;
                 if(gridNodes.ContainsKey(c)) {
                     // if the neighboring node exists at these coordinates, link it as a neighbor of the node
@@ -146,7 +142,8 @@ public class Maze : MonoBehaviour {
         item.name = prefabItem.name + " " + coord.ToString();
         gridItems[coord] = item;
     }
-    public List<Node> GetPath(Vector2Int from, Vector2Int to) {
+
+     List<Node> GetPath(Vector2Int from, Vector2Int to) {
         //Debug.Log("from: " + from.ToString() + " to: " + to.ToString());
         Node startNode = GetNode(from);
         //Debug.Log("startNode: " + startNode.ToString());
@@ -196,7 +193,7 @@ public class Maze : MonoBehaviour {
         return GetParentPath(node.Parent, path);
     }
 
-    public void UpdateCharacterPosition(Character character) {
+     void UpdateCharacterPosition(Character character) {
         //Debug.Log("UpdateCharacterPosition");
         // ++ check if character is in tunnel ++ //
         Node playerNode = GetNode(character.Coordinate);
@@ -221,7 +218,7 @@ public class Maze : MonoBehaviour {
                 gridItems.Remove(player.Coordinate);
                 Destroy(item.gameObject);
                 player.Score++;
-                GameManager.Instance.RemainingBalls--;
+                //GameManager.Instance._remainingBalls--;
             }
         }
 
@@ -234,7 +231,7 @@ public class Maze : MonoBehaviour {
         }
     }
 
-    public Vector2Int GetPlayerGridPosition() {
+     Vector2Int GetPlayerGridPosition() {
         return GameManager.Instance.player.Coordinate;
     }
 
@@ -282,26 +279,26 @@ public class Maze : MonoBehaviour {
         }
     }*/
 
-    public Node GetNode(Vector2Int coordinate) {
+     Node GetNode(Vector2Int coordinate) {
         if (!gridNodes.ContainsKey(coordinate)) {
             return null;
         }
         return gridNodes[coordinate];
     }
 
-    public Item GetItem(Vector2Int coordinate) {
+     Item GetItem(Vector2Int coordinate) {
         if (!gridItems.ContainsKey(coordinate)) {
             return null;
         }
         return gridItems[coordinate];
     }
 
-    public Vector3 GetWorldPositionFromCoord(Vector2Int gridPosition) {
-        return pathGrid.CellToWorld(new Vector3Int(gridPosition.x, gridPosition.y, 0)) + Vector3.one * 0.5f * MapScale.x;
+     Vector3 GetWorldPositionFromCoord(Vector2Int gridPosition) {
+        return pathGrid.CellToWorld(new Vector3Int(gridPosition.x, gridPosition.y, 0)) + new Vector3(pathGrid.cellSize.x * 0.5f, pathGrid.cellSize.y * 0.5f);
         //return new Vector3((gridPosition.x + 0.5f) * MapScale.x, (gridPosition.y + 0.5f) * MapScale.y) + transform.position;
     }
     
-    public Vector2Int GetCoordFromWorldPosition(Vector3 worldPosition) {
+     Vector2Int GetCoordFromWorldPosition(Vector3 worldPosition) {
         Vector3Int coord3 = pathGrid.WorldToCell(worldPosition);
         return new Vector2Int(coord3.x, coord3.y);
         //worldPosition -= transform.position;

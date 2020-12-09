@@ -20,13 +20,14 @@ public class Player : Character
 
     protected override void ChooseDirection() {
         //Debug.Log(name + " is on " + Coordinate.ToString() + " and the node is " + (Maze.Instance.GetNode(Coordinate) == null ? "" : "NOT ") + "null");
-        Maze maze = Maze.Instance;
         Vector2Int inputs = GetMoveInputs(); // get the player inputs related to movement
-        if(inputs != Vector2Int.zero && maze.GetNode(Coordinate).HasNeighbor(inputs)) {
+        GameManager maze = GameManager.Instance;
+        Node currentNode = maze.GetNode(Coordinate);
+        if(inputs != Vector2Int.zero && currentNode.HasNeighbor(inputs)) {
             // if player is pressing a move key and there is a cell in this direction, choose this direction
             Direction = inputs;
         }
-        if (!maze.GetNode(Coordinate).HasNeighbor(Direction)) {
+        if (!currentNode.HasNeighbor(Direction)) {
             Direction = Vector2Int.zero;
         }
         //Debug.Log("Direction prepared! New: " + Direction.ToString() + " based on inputs: " + inputs.ToString());
