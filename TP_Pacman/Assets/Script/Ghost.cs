@@ -6,6 +6,8 @@ public class Ghost : Character {
     public Player target;
     public GhostType type;
 
+    public bool IsVulnerable = false;
+
     List<Node> _path;
 
     protected override void Update() {
@@ -52,6 +54,20 @@ public class Ghost : Character {
                 break;
         }*/
         Direction = nextCoord - Coordinate;
+    }
+
+    protected override void UpdateDirectionAnimation() {
+        int dirInt = 0; // idle
+        if(Direction == Vector2Int.right) {
+            dirInt = 1; // moving right
+        } else if(Direction == Vector2Int.down) {
+            dirInt = 2; // moving down
+        } else if(Direction == Vector2Int.left) {
+            dirInt = 3; // moving left
+        } else if(Direction == Vector2Int.up) {
+            dirInt = 4; // moving up
+        }
+        animator.SetInteger("Direction", dirInt);
     }
 }
 

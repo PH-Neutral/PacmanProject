@@ -2,10 +2,56 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Player : Character
-{
+public class Player : Character {
     public int Score {
         get; set;
+    }
+
+    Vector2Int nextDir;
+
+    protected override void ChooseDirection() {
+        //Debug.Log(name + " is on " + Coordinate.ToString() + " and the node is " + (Maze.Instance.GetNode(Coordinate) == null ? "" : "NOT ") + "null");
+        Vector2Int inputs = GetMoveInputs(); // get the player inputs related to movement
+        GameManager gm = GameManager.Instance;
+        Node nextNode = gm.GetNode(_nextCoord);
+        if (nextNode == null && gm.GetNode(_currentCoord).Type == NodeType.Tunnel) {
+            nextNode = (gm.GetNode(_currentCoord) as NodeTunnel).LinkedTunnel;
+        }
+        if(inputs != Vector2Int.zero) {
+            // if player is pressing a move key
+            if(nextNode.HasNeighbor(inputs)) {
+                // if there is a cell in this direction, choose this direction
+                Direction = inputs;
+                nextDir = Vector2Int.zero;
+            }
+        }
+
+        if(!nextNode.HasNeighbor(Direction)) {
+            // if cell in this direction is a wall, then stop moving
+            Direction = Vector2Int.zero;
+        } else if(inputs != Vector2Int.zero && !nextNode.HasNeighbor(inputs)) {
+            nextDir = inputs;
+        }
+
+        if (nextNode.HasNeighbor(nextDir)) {
+            Direction = nextDir;
+            nextDir = Vector2Int.zero;
+        }
+        //Debug.Log("Direction prepared! New: " + Direction.ToString() + " based on inputs: " + inputs.ToString());
+    }
+
+    protected override void UpdateDirectionAnimation() {
+        int dirInt = 0; // idle
+        if(Direction == Vector2Int.right) {
+            dirInt = 1; // moving right
+        } else if(Direction == Vector2Int.down) {
+            dirInt = 2; // moving down
+        } else if(Direction == Vector2Int.left) {
+            dirInt = 3; // moving left
+        } else if(Direction == Vector2Int.up) {
+            dirInt = 4; // moving up
+        }
+        animator.SetInteger("Direction", dirInt);
     }
 
     Vector2Int GetMoveInputs() {
@@ -16,20 +62,5 @@ public class Player : Character
             inputs.y = 0;
         }
         return inputs;
-    }
-
-    protected override void ChooseDirection() {
-        //Debug.Log(name + " is on " + Coordinate.ToString() + " and the node is " + (Maze.Instance.GetNode(Coordinate) == null ? "" : "NOT ") + "null");
-        Vector2Int inputs = GetMoveInputs(); // get the player inputs related to movement
-        GameManager maze = GameManager.Instance;
-        Node currentNode = maze.GetNode(Coordinate);
-        if(inputs != Vector2Int.zero && currentNode.HasNeighbor(inputs)) {
-            // if player is pressing a move key and there is a cell in this direction, choose this direction
-            Direction = inputs;
-        }
-        if (!currentNode.HasNeighbor(Direction)) {
-            Direction = Vector2Int.zero;
-        }
-        //Debug.Log("Direction prepared! New: " + Direction.ToString() + " based on inputs: " + inputs.ToString());
     }
 }

@@ -5,7 +5,6 @@ using UnityEngine.Tilemaps;
 using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour {
-    public static readonly Vector2Int[] directions = new Vector2Int[4] { Vector2Int.left, Vector2Int.right, Vector2Int.down, Vector2Int.up };
     public static GameManager Instance = null;
 
     public bool GamePaused {
@@ -14,8 +13,10 @@ public class GameManager : MonoBehaviour {
     public Player player;
     public List<Ghost> ghosts;
 
-    [SerializeField] Grid pathGrid = null;
-    [SerializeField] Grid frameGrid = null;
+    Grid Grid {
+        get { return tilemapPath.layoutGrid; }
+    }
+    Tilemap tilemapItem = null, tilemapPath = null, tilemapWalls = null;
     [SerializeField] Item prefabMarker = null;
     [SerializeField] Item prefabBall = null, prefabBonus = null;
     Dictionary<Vector2Int, Node> gridNodes = new Dictionary<Vector2Int, Node>();
@@ -30,11 +31,12 @@ public class GameManager : MonoBehaviour {
             Destroy(gameObject);
         }
 
-        pathGrid = GameObject.Find("Grid_background").GetComponent<Grid>();
-        frameGrid = GameObject.Find("Grid_foreground").GetComponent<Grid>();
+        tilemapItem = GameObject.Find("Tilemap_emptyAreas").GetComponent<Tilemap>();
+        tilemapPath = GameObject.Find("Tilemap_paths").GetComponent<Tilemap>();
+        tilemapWalls = GameObject.Find("Tilemap_walls").GetComponent<Tilemap>();
 
         InitializeGraph();
-        SpawnItems(prefabBonus);
+        //SpawnItems(prefabBonus);
         SpawnBalls();
 
         AdaptCamera();
@@ -54,52 +56,52 @@ public class GameManager : MonoBehaviour {
         GamePaused = false;
     }
 
-    public void GameLost(Player player) {
+    private void Update() {
+        // ++ Check collision between player and balls ++ //
+        Item item;
+        if((item = GetItem(player.Coordinate)) != null) {
+            // if there is an item at these coords
+            // >>> check what kind of item it is
+            gridItems.Remove(player.Coordinate);
+            Destroy(item.gameObject);
+            player.Score++;
+            _remainingBalls--;
+            // ++ Check if every ball has been eaten ++ //
+            if(_remainingBalls <= 0) {
+                WinGame();
+            }
+        }
+
+        // ++ Check collision between player and ghosts ++ //
+        foreach(Ghost g in ghosts) {
+            if(player.Coordinate == g.Coordinate) {
+                if (g.IsVulnerable) {
+                    g.MakeDead();
+                } else {
+                    player.MakeDead();
+                    LoseGame(player);
+                }
+            }
+        }
+
+        
+    }
+
+    void WinGame() {
         GamePaused = true;
-        Debug.LogError("Player lost with Score=" + player.Score + " and " + _remainingBalls + " balls remaining.");
+        Debug.LogError("Player won with Score = " + player.Score);
+        Invoke("GoTo_MainMenu", 1f);
+
+    }
+
+    void LoseGame(Player player) {
+        GamePaused = true;
+        Debug.LogError("Player lost with Score = " + player.Score + " and " + _remainingBalls + " balls remaining.");
         Invoke("GoTo_MainMenu", 1f);
     }
 
     void GoTo_MainMenu() {
         SceneManager.LoadScene(0);
-    }
-
-    public void UpdateCharacterPosition(Character character) {
-        //Debug.Log("UpdateCharacterPosition");
-        // ++ check if character is in tunnel ++ //
-        /*Node playerNode = GetNode(character.Coordinate);
-        if(playerNode.Type == NodeType.Tunnel) {
-            character.transform.position = CellToWorld((playerNode as NodeTunnel).LinkedTunnel.Coordinate);
-        }*/
-
-        // +++ Player only +++ //
-        if(character is Player player) {
-            //Debug.Log("Character is player");
-            // ++ check if player collides with a ghost ++ //
-            foreach(Ghost g in ghosts) {
-                if(player.Coordinate == g.Coordinate) {
-                    GameLost(player);
-                }
-            }
-            // ++ check if player collides with an item ++ //
-            Item item;
-            if((item = GetItem(player.Coordinate)) != null) {
-                // if there is an item at these coords
-                // >>> check what kind of item it is
-                gridItems.Remove(player.Coordinate);
-                Destroy(item.gameObject);
-                player.Score++;
-                _remainingBalls--;
-            }
-        }
-
-        // +++ Ghost only +++ //
-        else if(character is Ghost ghost) {
-            // ++ check if ghost collides with player ++ //
-            if(ghost.Coordinate == this.player.Coordinate) {
-                GameLost(this.player);
-            }
-        }
     }
 
     public Node GetNode(Vector2Int coordinate) {
@@ -117,12 +119,12 @@ public class GameManager : MonoBehaviour {
     }
 
     public Vector3 CellToWorld(Vector2Int gridPosition) {
-        return pathGrid.CellToWorld(new Vector3Int(gridPosition.x, gridPosition.y, 0)) + new Vector3(pathGrid.cellSize.x * 0.5f, pathGrid.cellSize.y * 0.5f);
+        return tilemapPath.GetCellCenterWorld(new Vector3Int(gridPosition.x, gridPosition.y, 0));// + new Vector3(Grid.cellSize.x * 0.5f, Grid.cellSize.y * 0.5f);
         //return new Vector3((gridPosition.x + 0.5f) * MapScale.x, (gridPosition.y + 0.5f) * MapScale.y) + transform.position;
     }
 
     public Vector2Int WorldToCell(Vector3 worldPosition) {
-        Vector3Int coord3 = pathGrid.WorldToCell(worldPosition);
+        Vector3Int coord3 = Grid.WorldToCell(worldPosition);
         return new Vector2Int(coord3.x, coord3.y);
         //worldPosition -= transform.position;
         //return new Vector2Int(Mathf.FloorToInt(worldPosition.x / MapScale.x - MapScale.x * 0.5f), Mathf.FloorToInt(worldPosition.y / MapScale.y - MapScale.y * 0.5f));
@@ -180,14 +182,14 @@ public class GameManager : MonoBehaviour {
 
     void InitializeGraph() {
         // +++ Generate Nodes +++ //
-        Tilemap pathMap = pathGrid.GetComponentInChildren<Tilemap>(); // recover the tilemap
-        pathMap.CompressBounds(); // get rid of empty rows and columns in the cellBounds
-        BoundsInt bounds = pathMap.cellBounds;
+        //Tilemap pathMap = Grid.transform.GetChild(1).gameObject.GetComponent<Tilemap>(); // recover the tilemap_paths
+        tilemapPath.CompressBounds(); // get rid of empty rows and columns in the cellBounds
+        BoundsInt bounds = tilemapPath.cellBounds;
         // iterate over the tilemap from the bottom left corner to the top right corner
         for(int x = bounds.xMin; x < bounds.xMax; x++) {
             for(int y = bounds.yMin; y < bounds.yMax; y++) {
                 Vector3Int gridPos = new Vector3Int(x, y, 0);
-                if(pathMap.GetTile(gridPos) != null) {
+                if(tilemapPath.GetTile(gridPos) != null) {
                     // if there is a tile at these coordinates, create a node for it and add it to the appropriate dictionary
                     Vector2Int coord = new Vector2Int(gridPos.x, gridPos.y);
                     gridNodes[coord] = new Node(coord);
@@ -201,7 +203,7 @@ public class GameManager : MonoBehaviour {
         foreach(Vector2Int coord in gridNodes.Keys) {
             Node n = gridNodes[coord];
             // iterate over every adjacent node
-            foreach(Vector2Int deltaCoord in directions) {
+            foreach(Vector2Int deltaCoord in PacTools.v2IntDirections) {
                 Vector2Int c = coord + deltaCoord;
                 if(gridNodes.ContainsKey(c)) {
                     // if the neighboring node exists at these coordinates, link it as a neighbor of the node
@@ -266,9 +268,16 @@ public class GameManager : MonoBehaviour {
     }
 
     void SpawnBalls() {
-        int nbItems = gridItems.Count;
-        SpawnItems(prefabBall);
-        _remainingBalls = gridItems.Count - nbItems;
+        Tilemap ignoreMap = Grid.transform.GetChild(0).gameObject.GetComponent<Tilemap>(); // recover the tilemap_emptyAreas
+        //SpawnItems(prefabBall);
+        GameObject pool = new GameObject(prefabBall.name + " Pool");
+        pool.transform.SetParent(transform);
+        foreach(Vector2Int coord in gridNodes.Keys) {
+            if(!gridItems.ContainsKey(coord) && !ignoreMap.HasTile(new Vector3Int(coord.x, coord.y, 0))) {
+                SpawnItem(prefabBall, coord, pool.transform);
+            }
+        }
+        _remainingBalls = gridItems.Count;
     }
 
     void SpawnItems(Item prefabItem) {
@@ -291,18 +300,16 @@ public class GameManager : MonoBehaviour {
     }
 
     void AdaptCamera() {
-        Tilemap map = frameGrid.GetComponentInChildren<Tilemap>();
-        map.CompressBounds();
-        BoundsInt bounds = map.cellBounds;
-        //Vector3 xMin = GetWorldPositionFromGrid(new Vector2Int(bounds.xMin, 0));
-        Vector3 xMax = CellToWorld(new Vector2Int(bounds.xMax, 0));
-        Vector3 yMin = CellToWorld(new Vector2Int(0, bounds.yMin));
-        Vector3 yMax = CellToWorld(new Vector2Int(0, bounds.yMax));
-        Vector3 newPos = Vector3.Lerp(xMax, yMax, 0.5f);
-        newPos.x -= frameGrid.cellSize.x * 0.5f;
-        newPos.y -= frameGrid.cellSize.y * 0.5f;
-        newPos.z = Camera.main.transform.position.z;
-        Camera.main.transform.position = newPos;
-        Camera.main.orthographicSize = Vector3.Distance(yMin, yMax) * 0.5f;
+        tilemapWalls.CompressBounds();
+        BoundsInt bounds = tilemapWalls.cellBounds;
+        Vector3 cornerBotLeft = CellToWorld(new Vector2Int(bounds.xMin, bounds.yMin));
+        Vector3 cornerTopRight = CellToWorld(new Vector2Int(bounds.xMax, bounds.yMax));
+        Vector3 cameraPos = Vector3.Lerp(cornerBotLeft, cornerTopRight, 0.5f);
+        cameraPos.x -= Grid.cellSize.x * 0.5f;
+        cameraPos.y -= Grid.cellSize.y * 0.5f;
+        cameraPos.z = Camera.main.transform.position.z;
+        Camera.main.transform.position = cameraPos;
+        //Debug.Log("cornerBotLeft: " + cornerBotLeft + "; cornerTopRight: " + cornerTopRight + "; bounds.size: " + bounds.size);
+        Camera.main.orthographicSize = bounds.size.y * 0.5f * Grid.cellSize.y;
     }
 }

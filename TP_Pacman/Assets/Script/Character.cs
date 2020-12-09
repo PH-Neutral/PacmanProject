@@ -17,14 +17,19 @@ public abstract class Character : MonoBehaviour {
     /// </summary>
     public float speed;
 
+    protected Animator animator;
     protected Vector2Int _direction;
     protected Vector3 _startPosition, _endPosition;
-    protected Node _lastNode = null;
+    protected Vector2Int _lastCoord, _currentCoord, _nextCoord;
 
     float _Delay {
         get { return 1f / speed; }
     }
     float _timer = 0f;
+
+    private void Awake() {
+        animator = GetComponent<Animator>();
+    }
 
     private void Start() {
         SetReady();
@@ -33,53 +38,67 @@ public abstract class Character : MonoBehaviour {
     protected virtual void Update() {
         GameManager gm = GameManager.Instance;
         if (gm.GamePaused) { return; }
+
+        ChooseDirection(); // choose the direction to move towards
+
         _timer += Time.deltaTime;
         if(_timer >= _Delay) {
             _timer -= _Delay;
-            // ++ check if character is in tunnel ++ //
-            /*Node playerNode = gm.GetNode(Coordinate);
-            if(playerNode.Type == NodeType.Tunnel) {
-                // if player is on a tunnel
-                _endPosition = gm.CellToWorld((playerNode as NodeTunnel).LinkedTunnel.Coordinate);
-            }*/
-            transform.position = _endPosition;
-            // ++ Character is now at center of the cell ++ //
-            Node currentNode = gm.GetNode(Coordinate);
-            if (currentNode != _lastNode) {
-                // if endPosition was updated (meaning: character is not idle)
-                gm.UpdateCharacterPosition(this); // update new position in maze
-            }
-
-            ChooseDirection(); // choose the direction to move towards
-
+            transform.position = gm.CellToWorld(_nextCoord); // place character at center of cell
             if(gm.GetNode(Coordinate).HasNeighbor(Direction)) {
                 // if there is a cell in the current direction, then start moving towards it
-                _endPosition = gm.CellToWorld(Coordinate + Direction);
+                _nextCoord = Coordinate + Direction;
+                //_endPosition = gm.CellToWorld(Coordinate + Direction);
             } else {
                 _timer = _Delay;
             }
-            _startPosition = transform.position; // update startPosition
-            _lastNode = currentNode;
+            _currentCoord = Coordinate;
+            _lastCoord = _currentCoord;
+            //_startPosition = transform.position; // update startPosition
+            //_lastNode = gm.GetNode(Coordinate);
+            UpdateDirectionAnimation();
         } else {
+            Vector3 startPos = gm.CellToWorld(_currentCoord);
+            Vector3 endPos = gm.CellToWorld(_nextCoord);
             // ++ Character is moving toward the cell ++ //
-            transform.position = Vector3.Lerp(_startPosition, _endPosition, _timer * speed);
+            transform.position = Vector3.Lerp(startPos, endPos, _timer * speed);
             //Debug.Log(name + " coords: " + Coordinate.ToString() + "; position: " + transform.position.ToString() + "; startPos: " + _startPosition.ToString() + "; endPos: " + _endPosition.ToString());
-            if (gm.GetNode(Coordinate) == null && gm.GetNode(gm.WorldToCell(_startPosition)).Type == NodeType.Tunnel) {
-                NodeTunnel nt1 = gm.GetNode(gm.WorldToCell(_startPosition)) as NodeTunnel;
+            Node nodeAtStart;
+            if (gm.GetNode(Coordinate) == null && (nodeAtStart = gm.GetNode(_currentCoord)).Type == NodeType.Tunnel) {
+                NodeTunnel nt1 = nodeAtStart as NodeTunnel;
                 NodeTunnel nt2 = nt1.LinkedTunnel;
-                Vector3 c1 = _startPosition;
-                Vector3 c2 = gm.CellToWorld(nt2.Coordinate + Vector2Int.left * (int)Mathf.Sign(nt1.Coordinate.x - nt2.Coordinate.x));
-                transform.position = transform.position - (c1 - c2);
-                _startPosition = c2;
-                _endPosition = gm.CellToWorld(nt2.Coordinate);
+                Vector2Int newStartCoord = nt2.Coordinate + Vector2Int.left * (int)Mathf.Sign(nt1.Coordinate.x - nt2.Coordinate.x);
+                Vector3 newStartPos = gm.CellToWorld(newStartCoord);
+                transform.position -= startPos - newStartPos;
+                _currentCoord = newStartCoord;
+                _nextCoord = nt2.Coordinate;
+                //_startPosition = c2;
+                //_endPosition = gm.CellToWorld(nt2.Coordinate);
             }
         }
     }
 
     public void SetReady() {
-        _endPosition = GameManager.Instance.CellToWorld(Coordinate);
+        _lastCoord = Coordinate;
+        _currentCoord = Coordinate;
+        _nextCoord = Coordinate;
+        //_endPosition = GameManager.Instance.CellToWorld(Coordinate);
         _timer = _Delay;
+        MakeAlive();
+    }
+
+    protected abstract void UpdateDirectionAnimation();
+
+    public void MakeDead() {
+        animator.speed = 1f;
+        animator.SetBool("Dead", true);
+    }
+
+    public void MakeAlive() {
+        animator.speed = speed;
+        animator.SetBool("Dead", false);
     }
 
     protected abstract void ChooseDirection();
+
 }
