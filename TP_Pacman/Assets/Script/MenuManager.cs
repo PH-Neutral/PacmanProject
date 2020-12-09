@@ -27,6 +27,10 @@ public class MenuManager : MonoBehaviour
         SceneManager.LoadScene(1);
     }
 
+    public void OnClick_Menu()
+    {
+        SceneManager.LoadScene(0);
+    }
     public void OnClick_Exit()
     {
         Application.Quit();
