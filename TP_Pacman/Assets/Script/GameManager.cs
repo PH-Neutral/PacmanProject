@@ -8,10 +8,11 @@ public class GameManager : MonoBehaviour {
     public static GameManager Instance = null;
 
     public bool GamePaused {
-        get; private set;
+        get; set;
     }
     public Player player;
     public List<Ghost> ghosts;
+    private float time;
 
     Grid Grid {
         get { return tilemapPath.layoutGrid; }
@@ -53,10 +54,13 @@ public class GameManager : MonoBehaviour {
             g.target = player;
             //Debug.Log("Ghosts targets assigned!");
         }
-        GamePaused = false;
     }
 
     private void Update() {
+        if (GamePaused)
+        {
+            return;
+        }
         // ++ Check collision between player and balls ++ //
         Item item;
         if((item = GetItem(player.Coordinate)) != null) {
@@ -66,14 +70,11 @@ public class GameManager : MonoBehaviour {
             Destroy(item.gameObject);
             player.Score++;
             _remainingBalls--;
-            // ++ Check if every ball has been eaten ++ //
-            if(_remainingBalls <= 0) {
-                WinGame();
-            }
+            
         }
-
+        UpdateOverlay();
         // ++ Check collision between player and ghosts ++ //
-        foreach(Ghost g in ghosts) {
+        foreach (Ghost g in ghosts) {
             if(player.Coordinate == g.Coordinate) {
                 if (g.IsVulnerable) {
                     g.MakeDead();
@@ -84,24 +85,61 @@ public class GameManager : MonoBehaviour {
             }
         }
 
-        
+        // ++ Check if every ball has been eaten ++ //
+        if (_remainingBalls <= 0)
+        {
+            WinGame();
+        }
+    }
+
+    void StartChrono()
+    {
+        time = 0;
+
+    }
+
+    void UpdateOverlay()
+    {
+        UpdateChrono();
+        MenuManager.Instance.Update_Overlay(time, player.Score, _remainingBalls);
+    }
+
+    void UpdateChrono()
+    {
+        if (!GamePaused)
+        {
+            time += Time.deltaTime;
+        }
     }
 
     void WinGame() {
+        MenuManager.Instance.ShowVictory();
         GamePaused = true;
-        Debug.LogError("Player won with Score = " + player.Score);
-        Invoke("GoTo_MainMenu", 1f);
-
     }
 
     void LoseGame(Player player) {
+        MenuManager.Instance.ShowGameover();
         GamePaused = true;
-        Debug.LogError("Player lost with Score = " + player.Score + " and " + _remainingBalls + " balls remaining.");
-        Invoke("GoTo_MainMenu", 1f);
     }
 
-    void GoTo_MainMenu() {
-        SceneManager.LoadScene(0);
+    public void StartGame() {
+        InitializeGraph();
+        SpawnBalls();
+        AdaptCamera();
+
+        GamePaused = false;
+        StartChrono();
+    }
+
+    public void RestartGame()
+    {
+        gridNodes.Clear();
+        foreach (Item item in gridItems.Values)
+        {
+            Destroy(item.gameObject);
+        } 
+        gridItems.Clear();
+        StartGame();
     }
 
     public Node GetNode(Vector2Int coordinate) {
