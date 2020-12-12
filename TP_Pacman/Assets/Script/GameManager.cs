@@ -23,7 +23,12 @@ public class GameManager : MonoBehaviour {
     Dictionary<Vector2Int, Node> gridNodes = new Dictionary<Vector2Int, Node>();
     Dictionary<Vector2Int, Item> gridItems = new Dictionary<Vector2Int, Item>();
 
-    int _remainingBalls = 0;
+    public int RemainingBalls {
+        get; private set;
+    }
+    public int MaxBalls {
+        get; private set;
+    }
 
     private void Awake() {
         if (Instance == null) {
@@ -67,7 +72,7 @@ public class GameManager : MonoBehaviour {
             gridItems.Remove(player.Coordinate);
             Destroy(item.gameObject);
             player.Score++;
-            _remainingBalls--;
+            RemainingBalls--;
 
         }
         UpdateChrono();
@@ -86,7 +91,7 @@ public class GameManager : MonoBehaviour {
         }
 
         // ++ Check if every ball has been eaten ++ //
-        if (_remainingBalls <= 0)
+        if (RemainingBalls <= 0)
         {
             WinGame();
         }
@@ -105,7 +110,7 @@ public class GameManager : MonoBehaviour {
 
     void UpdateOverlay()
     {
-        MenuManager.Instance.Update_Overlay(_chrono, player.Score, _remainingBalls);
+        MenuManager.Instance.Update_Overlay(_chrono, player.Score, RemainingBalls);
     }
 
     void WinGame() {
@@ -171,12 +176,12 @@ public class GameManager : MonoBehaviour {
         //Debug.Log("startNode: " + startNode.ToString());
         Node endNode = GetNode(to);
         //Debug.Log("endNode: " + endNode.ToString());
-        /*if(startNode == null) {
-            Debug.Log("startNode is NULL");
+        if(startNode == null) {
+            Debug.Log("startNode is NULL for coord: " + from.ToString());
         }
         if(endNode == null) {
-            Debug.Log("endNode is NULL");
-        }*/
+            Debug.Log("endNode is NULL for coord: " + to.ToString());
+        }
         List<Node> path = null;
         Queue<Node> queue = new Queue<Node>();
         queue.Enqueue(startNode);
@@ -238,8 +243,8 @@ public class GameManager : MonoBehaviour {
         foreach(Vector2Int coord in gridNodes.Keys) {
             Node n = gridNodes[coord];
             // iterate over every adjacent node
-            foreach(Vector2Int deltaCoord in PacTools.v2IntDirections) {
-                Vector2Int c = coord + deltaCoord;
+            for(int i=0; i<PacTools.v2IntDirections.Length; i++) {
+                Vector2Int c = coord + PacTools.v2IntDirections[i];
                 if(gridNodes.ContainsKey(c)) {
                     // if the neighboring node exists at these coordinates, link it as a neighbor of the node
                     n.Neighbors.Add(gridNodes[c]);
@@ -310,7 +315,7 @@ public class GameManager : MonoBehaviour {
                 SpawnItem(prefabBall, coord, pool.transform);
             }
         }
-        _remainingBalls = gridItems.Count;
+        RemainingBalls = MaxBalls = gridItems.Count;
     }
 
     void SpawnItems(Item prefabItem) {

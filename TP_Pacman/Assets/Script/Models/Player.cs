@@ -9,10 +9,10 @@ public class Player : Character {
 
     Vector2Int nextDir;
 
-    protected override void ChooseDirection() {
+    protected override void DoEachUpdate() {
+        //GameManager gm = GameManager.Instance;
         //Debug.Log(name + " is on " + Coordinate.ToString() + " and the node is " + (Maze.Instance.GetNode(Coordinate) == null ? "" : "NOT ") + "null");
         Vector2Int inputs = GetMoveInputs(); // get the player inputs related to movement
-        GameManager gm = GameManager.Instance;
         Node nextNode = gm.GetNode(_nextCoord);
         if (nextNode == null && gm.GetNode(_currentCoord).Type == NodeType.Tunnel) {
             nextNode = (gm.GetNode(_currentCoord) as NodeTunnel).LinkedTunnel;
@@ -38,6 +38,10 @@ public class Player : Character {
             nextDir = Vector2Int.zero;
         }
         //Debug.Log("Direction prepared! New: " + Direction.ToString() + " based on inputs: " + inputs.ToString());
+    }
+
+    protected override void DoWhenCellReached() {
+        // do nothing
     }
 
     Vector2Int GetMoveInputs() {

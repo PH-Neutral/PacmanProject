@@ -15,15 +15,17 @@ public abstract class Character : MonoBehaviour {
     /// <summary>
     /// Move speed of player in cell/seconds.
     /// </summary>
-    public float speed;
+    [SerializeField] protected float speed, speedRatio;
 
     protected Animator animator;
     protected Vector2Int _direction;
     protected Vector3 _startPosition, _endPosition;
     protected Vector2Int _lastCoord, _currentCoord, _nextCoord;
 
+    protected GameManager gm; // reference to the GameManager for ease of use
+
     float _Delay {
-        get { return 1f / speed; }
+        get { return 1f / (speed * speedRatio); }
     }
     float _timer = 0f;
 
@@ -32,19 +34,28 @@ public abstract class Character : MonoBehaviour {
     }
 
     private void Start() {
-        SetReady();
+        gm = GameManager.Instance;
+        _lastCoord = Coordinate;
+        _currentCoord = Coordinate;
+        _nextCoord = Coordinate;
+        //_endPosition = GameManager.Instance.CellToWorld(Coordinate);
+        _timer = _Delay;
+        MakeAlive();
     }
 
     protected virtual void Update() {
-        GameManager gm = GameManager.Instance;
+        //GameManager gm = GameManager.Instance;
         if (gm.GamePaused) { return; }
 
-        ChooseDirection(); // choose the direction to move towards
+        DoEachUpdate();
 
         _timer += Time.deltaTime;
         if(_timer >= _Delay) {
             _timer -= _Delay;
             transform.position = gm.CellToWorld(_nextCoord); // place character at center of cell
+
+            DoWhenCellReached();
+
             if(gm.GetNode(Coordinate).HasNeighbor(Direction)) {
                 // if there is a cell in the current direction, then start moving towards it
                 _nextCoord = Coordinate + Direction;
@@ -78,15 +89,6 @@ public abstract class Character : MonoBehaviour {
         }
     }
 
-    public void SetReady() {
-        _lastCoord = Coordinate;
-        _currentCoord = Coordinate;
-        _nextCoord = Coordinate;
-        //_endPosition = GameManager.Instance.CellToWorld(Coordinate);
-        _timer = _Delay;
-        MakeAlive();
-    }
-
     void UpdateDirectionAnimation() {
         int dirInt = 0; // idle
         if(Direction == Vector2Int.right) {
@@ -111,6 +113,8 @@ public abstract class Character : MonoBehaviour {
         animator.SetBool("Dead", false);
     }
 
-    protected abstract void ChooseDirection();
+    protected abstract void DoEachUpdate();
+
+    protected abstract void DoWhenCellReached();
 
 }
