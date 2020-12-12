@@ -27,7 +27,7 @@ public abstract class Character : MonoBehaviour {
     }
     float _timer = 0f;
 
-    private void Awake() {
+    protected virtual void Awake() {
         animator = GetComponent<Animator>();
     }
 
@@ -87,7 +87,19 @@ public abstract class Character : MonoBehaviour {
         MakeAlive();
     }
 
-    protected abstract void UpdateDirectionAnimation();
+    void UpdateDirectionAnimation() {
+        int dirInt = 0; // idle
+        if(Direction == Vector2Int.right) {
+            dirInt = 1; // moving right
+        } else if(Direction == Vector2Int.down) {
+            dirInt = 2; // moving down
+        } else if(Direction == Vector2Int.left) {
+            dirInt = 3; // moving left
+        } else if(Direction == Vector2Int.up) {
+            dirInt = 4; // moving up
+        }
+        animator.SetInteger("Direction", dirInt);
+    }
 
     public void MakeDead() {
         animator.speed = 1f;

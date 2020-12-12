@@ -60,10 +60,9 @@ public class MenuManager : MonoBehaviour
 
     public void Update_Overlay(float time, int score, int remainingBalls)
     {
-        //ScoreText.text = "Score : " + score;
-        //BallsText.text = "Balles restantes : " + remainingBalls;
-        //TimeText.text = "Temps : " + time.ToString("hh:mm:ss");
-        //string.Format(str, "hh:mm:ss");
-        Debug.Log("Time: " + TimeSpan.FromSeconds(time).ToString("hh':'mm':'ss"));
+        ScoreText.text = "SCORE: " + score;
+        TimeText.text = "TEMPS: " + TimeSpan.FromSeconds(time).ToString("hh':'mm':'ss");
+        BallsText.text = "Balles restantes: " + remainingBalls;
+        //Debug.Log("Time: " + TimeSpan.FromSeconds(time).ToString("hh':'mm':'ss"));
     }
 }

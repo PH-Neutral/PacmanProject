@@ -12,7 +12,7 @@ public class GameManager : MonoBehaviour {
     }
     public Player player;
     public List<Ghost> ghosts;
-    private float time;
+    private float _chrono;
 
     Grid Grid {
         get { return tilemapPath.layoutGrid; }
@@ -57,10 +57,8 @@ public class GameManager : MonoBehaviour {
     }
 
     private void Update() {
-        if (GamePaused)
-        {
-            return;
-        }
+        if (GamePaused) { return; }
+
         // ++ Check collision between player and balls ++ //
         Item item;
         if((item = GetItem(player.Coordinate)) != null) {
@@ -70,9 +68,11 @@ public class GameManager : MonoBehaviour {
             Destroy(item.gameObject);
             player.Score++;
             _remainingBalls--;
-            
+
         }
+        UpdateChrono();
         UpdateOverlay();
+
         // ++ Check collision between player and ghosts ++ //
         foreach (Ghost g in ghosts) {
             if(player.Coordinate == g.Coordinate) {
@@ -80,7 +80,7 @@ public class GameManager : MonoBehaviour {
                     g.MakeDead();
                 } else {
                     player.MakeDead();
-                    LoseGame(player);
+                    LoseGame();
                 }
             }
         }
@@ -94,22 +94,18 @@ public class GameManager : MonoBehaviour {
 
     void StartChrono()
     {
-        time = 0;
+        _chrono = 0;
+    }
 
+    void UpdateChrono() {
+        if(!GamePaused) {
+            _chrono += Time.deltaTime;
+        }
     }
 
     void UpdateOverlay()
     {
-        UpdateChrono();
-        MenuManager.Instance.Update_Overlay(time, player.Score, _remainingBalls);
-    }
-
-    void UpdateChrono()
-    {
-        if (!GamePaused)
-        {
-            time += Time.deltaTime;
-        }
+        MenuManager.Instance.Update_Overlay(_chrono, player.Score, _remainingBalls);
     }
 
     void WinGame() {
@@ -117,7 +113,7 @@ public class GameManager : MonoBehaviour {
         GamePaused = true;
     }
 
-    void LoseGame(Player player) {
+    void LoseGame() {
         MenuManager.Instance.ShowGameover();
         GamePaused = true;
     }
@@ -127,8 +123,8 @@ public class GameManager : MonoBehaviour {
         SpawnBalls();
         AdaptCamera();
 
-        GamePaused = false;
         StartChrono();
+        GamePaused = false;
     }
 
     public void RestartGame()
@@ -139,6 +135,7 @@ public class GameManager : MonoBehaviour {
             Destroy(item.gameObject);
         } 
         gridItems.Clear();
+        player.Score = 0;
         StartGame();
     }
 
@@ -174,12 +171,12 @@ public class GameManager : MonoBehaviour {
         //Debug.Log("startNode: " + startNode.ToString());
         Node endNode = GetNode(to);
         //Debug.Log("endNode: " + endNode.ToString());
-        if(startNode == null) {
+        /*if(startNode == null) {
             Debug.Log("startNode is NULL");
         }
         if(endNode == null) {
             Debug.Log("endNode is NULL");
-        }
+        }*/
         List<Node> path = null;
         Queue<Node> queue = new Queue<Node>();
         queue.Enqueue(startNode);
@@ -306,12 +303,10 @@ public class GameManager : MonoBehaviour {
     }
 
     void SpawnBalls() {
-        Tilemap ignoreMap = Grid.transform.GetChild(0).gameObject.GetComponent<Tilemap>(); // recover the tilemap_emptyAreas
-        //SpawnItems(prefabBall);
         GameObject pool = new GameObject(prefabBall.name + " Pool");
         pool.transform.SetParent(transform);
         foreach(Vector2Int coord in gridNodes.Keys) {
-            if(!gridItems.ContainsKey(coord) && !ignoreMap.HasTile(new Vector3Int(coord.x, coord.y, 0))) {
+            if(!gridItems.ContainsKey(coord) && !tilemapItem.HasTile(new Vector3Int(coord.x, coord.y, 0))) {
                 SpawnItem(prefabBall, coord, pool.transform);
             }
         }
@@ -338,6 +333,7 @@ public class GameManager : MonoBehaviour {
     }
 
     void AdaptCamera() {
+        Camera mainCam = Camera.main;
         tilemapWalls.CompressBounds();
         BoundsInt bounds = tilemapWalls.cellBounds;
         Vector3 cornerBotLeft = CellToWorld(new Vector2Int(bounds.xMin, bounds.yMin));
@@ -346,8 +342,15 @@ public class GameManager : MonoBehaviour {
         cameraPos.x -= Grid.cellSize.x * 0.5f;
         cameraPos.y -= Grid.cellSize.y * 0.5f;
         cameraPos.z = Camera.main.transform.position.z;
-        Camera.main.transform.position = cameraPos;
         //Debug.Log("cornerBotLeft: " + cornerBotLeft + "; cornerTopRight: " + cornerTopRight + "; bounds.size: " + bounds.size);
-        Camera.main.orthographicSize = bounds.size.y * 0.5f * Grid.cellSize.y;
+        mainCam.orthographicSize = bounds.size.y * 0.5f * Grid.cellSize.y;
+
+        // ++ adapt maze position with overlay ++ // 
+        float mazeScreenPercent = 0.75f; // percentage of horizontal screen space allowed to the maze 
+        //float mazeHalfWidth = bounds.size.x * 0.5f * Grid.cellSize.x;
+        cameraPos.x += (1 - mazeScreenPercent) * mainCam.orthographicSize * mainCam.aspect;
+        //cameraPos.y += mainCam.orthographicSize;
+
+        mainCam.transform.position = cameraPos;
     }
 }

@@ -40,20 +40,6 @@ public class Player : Character {
         //Debug.Log("Direction prepared! New: " + Direction.ToString() + " based on inputs: " + inputs.ToString());
     }
 
-    protected override void UpdateDirectionAnimation() {
-        int dirInt = 0; // idle
-        if(Direction == Vector2Int.right) {
-            dirInt = 1; // moving right
-        } else if(Direction == Vector2Int.down) {
-            dirInt = 2; // moving down
-        } else if(Direction == Vector2Int.left) {
-            dirInt = 3; // moving left
-        } else if(Direction == Vector2Int.up) {
-            dirInt = 4; // moving up
-        }
-        animator.SetInteger("Direction", dirInt);
-    }
-
     Vector2Int GetMoveInputs() {
         float inputHorizontal = Input.GetAxis("Horizontal");
         float inputVertical = Input.GetAxis("Vertical");

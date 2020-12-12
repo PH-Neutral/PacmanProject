@@ -5,12 +5,22 @@ using UnityEngine;
 public class Ghost : Character {
     public Player target;
     public GhostType type;
-
     public bool IsVulnerable = false;
 
     List<Node> _path;
+    bool IsWaiting {
+        get; set;
+    }
+
+    protected override void Awake() {
+        base.Awake();
+        IsWaiting = true;
+    }
 
     protected override void Update() {
+        if (IsWaiting) {
+
+        }
         base.Update();
         if (_path == null) { return; }
         GameManager gm = GameManager.Instance;
@@ -32,17 +42,16 @@ public class Ghost : Character {
             // if ghost hit a wall
 
         }*/
-        _path = gm.GetPath(Coordinate, target.Coordinate) ?? _path;
-        Vector2Int nextCoord = _path[0].Coordinate;
-        /*switch (type) {
+        
+        Vector2Int nextCoord = Coordinate;
+        switch (type) {
             case GhostType.Dummy:
-                List<Node> possibleNeighbors = new List<Node>();
-                List<Node> neighbors = maze.GetNode(Coordinate).Neighbors;
-                foreach(Node n in neighbors) {
-                    if (n)
-                } 
+                //List<Node> possibleNeighbors = new List<Node>();
+                List<Node> neighbors = gm.GetNode(Coordinate).Neighbors;
+                nextCoord = neighbors[Random.Range(0, neighbors.Count)].Coordinate;
                 break;
             case GhostType.Tracker:
+                _path = gm.GetPath(Coordinate, target.Coordinate) ?? _path;
                 nextCoord = _path[0].Coordinate;
                 break;
             case GhostType.Seer:
@@ -50,24 +59,10 @@ public class Ghost : Character {
             case GhostType.Embusher:
                 break;
             default:
-                nextCoord = Coordinate;
+                //nextCoord = Coordinate;
                 break;
-        }*/
-        Direction = nextCoord - Coordinate;
-    }
-
-    protected override void UpdateDirectionAnimation() {
-        int dirInt = 0; // idle
-        if(Direction == Vector2Int.right) {
-            dirInt = 1; // moving right
-        } else if(Direction == Vector2Int.down) {
-            dirInt = 2; // moving down
-        } else if(Direction == Vector2Int.left) {
-            dirInt = 3; // moving left
-        } else if(Direction == Vector2Int.up) {
-            dirInt = 4; // moving up
         }
-        animator.SetInteger("Direction", dirInt);
+        Direction = nextCoord - Coordinate;
     }
 }
 
