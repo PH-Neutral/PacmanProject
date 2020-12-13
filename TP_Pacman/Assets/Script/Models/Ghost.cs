@@ -9,9 +9,11 @@ public abstract class Ghost : Character {
     }
     public bool IsVulnerable = false;
 
-    bool IsWaiting {
+    public bool IsWaiting {
         get; set;
     }
+
+    List<Vector3> _pathOutOfSpawner;
 
     protected override void Awake() {
         base.Awake();
@@ -19,10 +21,21 @@ public abstract class Ghost : Character {
     }
 
     protected override void Update() {
-        if (IsWaiting) {
-            // ---
+        if (target != null) {
+            base.Update();
+        } else if (!IsWaiting) {
+            //Debug.Log(this + " is not waiting anymore !");
+            if (gm.UpdateMovementUntethered(transform, _pathOutOfSpawner[0], speed)) {
+                _pathOutOfSpawner.RemoveAt(0);
+                if (_pathOutOfSpawner.Count == 0) {
+                    target = gm.Player;
+                    Debug.Log(this + " has left the house, the hunt is ON!");
+                    SetReady();
+                }
+            }
+        } else {
+            //Debug.Log(this + " is waiting for something...");
         }
-        base.Update();
         /*/ Debug
         for (int i=0; i<_path.Count; i++) {
             Vector3 startPos, endPos;
@@ -42,6 +55,7 @@ public abstract class Ghost : Character {
 
     protected override void DoWhenCellReached() {
         Node currentNode = gm.GetNode(Coordinate);
+        //Debug.Log("currentNode = " + currentNode + "; Coordinate = " + Coordinate);
         List<Vector2Int> possibleDirections = new List<Vector2Int>();
         for(int i = 0; i < PacTools.v2IntDirections.Length; i++) {
             Vector2Int dir = PacTools.v2IntDirections[i];
@@ -78,6 +92,10 @@ public abstract class Ghost : Character {
             }
         }
         return directions[shorterIndex];
+    }
+
+    public void SetOutOfSpawnerPath(List<Vector3> path) {
+        _pathOutOfSpawner = path;
     }
 }
 

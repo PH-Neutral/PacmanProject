@@ -1673,16 +1673,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 25a2ca9cae76cd640aaefd8ec6d16bf9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  player: {fileID: 1357918058}
-  ghosts:
-  - {fileID: 7298565698045154103}
-  - {fileID: 3787156546483218296}
-  - {fileID: 7292696261492785433}
-  - {fileID: 5467597365260561705}
-  prefabMarker: {fileID: 0}
+  prefabPlayer: {fileID: 6070673719889436551, guid: b4d9906ea5a566c479b828fd0f72bb03,
+    type: 3}
+  playerSpawnCoord: {x: 0, y: 2}
+  prefabGhosts:
+  - {fileID: -8331962966461121174, guid: a76b547b0ec7cdc4fa1c1392ed7e299b, type: 3}
+  - {fileID: 4626269775563905248, guid: d41a8be7c8b002f4fad122c7f09f0921, type: 3}
+  - {fileID: -6322183639531159035, guid: 71b77c23f643aa84187dec6066feb42e, type: 3}
+  - {fileID: -2529519549394171187, guid: cb925a680872a0642bbfe0c61a673398, type: 3}
+  ghostSpawnBounds:
+  - {x: -2, y: 5}
+  - {x: 1, y: 5}
+  ghostLeaveSpawnerVector: {x: 0, y: 3}
+  ghostsFreeAtPercentBallsEaten: 0.3
   prefabBall: {fileID: 8004363339207729548, guid: 5c213676f8d648a42a9d2eaff348a60b,
     type: 3}
-  prefabBonus: {fileID: 0}
 --- !u!4 &1101896362
 Transform:
   m_ObjectHideFlags: 0
@@ -11825,18 +11830,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1258760270}
   m_CullTransparentMesh: 0
---- !u!114 &1357918058 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 6070673719889436551, guid: b4d9906ea5a566c479b828fd0f72bb03,
-    type: 3}
-  m_PrefabInstance: {fileID: 6070673720258006234}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0fe8c17d60753704591fc8dc084ba961, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &1358819079
 GameObject:
   m_ObjectHideFlags: 0
@@ -20759,6 +20752,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: Ghost pink
       objectReference: {fileID: 0}
+    - target: {fileID: 3663363001055378445, guid: d41a8be7c8b002f4fad122c7f09f0921,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7189482570712013238, guid: d41a8be7c8b002f4fad122c7f09f0921,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -20816,18 +20814,6 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: d41a8be7c8b002f4fad122c7f09f0921, type: 3}
---- !u!114 &3787156546483218296 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 4626269775563905248, guid: d41a8be7c8b002f4fad122c7f09f0921,
-    type: 3}
-  m_PrefabInstance: {fileID: 3787156546483218295}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 84f3a5eb199005740938ab7313a38e2a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1001 &5467597365260561704
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -20895,20 +20881,13 @@ PrefabInstance:
       propertyPath: m_Name
       value: Ghost orange
       objectReference: {fileID: 0}
+    - target: {fileID: 5600368218252804454, guid: cb925a680872a0642bbfe0c61a673398,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: cb925a680872a0642bbfe0c61a673398, type: 3}
---- !u!114 &5467597365260561705 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: -2529519549394171187, guid: cb925a680872a0642bbfe0c61a673398,
-    type: 3}
-  m_PrefabInstance: {fileID: 5467597365260561704}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e134e3de5ecbcbf438a32bf14f6e6e63, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1001 &6070673720258006234
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -20920,6 +20899,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: Player
+      objectReference: {fileID: 0}
+    - target: {fileID: 6070673719889436544, guid: b4d9906ea5a566c479b828fd0f72bb03,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6070673719889436550, guid: b4d9906ea5a566c479b828fd0f72bb03,
         type: 3}
@@ -21062,18 +21046,6 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 71b77c23f643aa84187dec6066feb42e, type: 3}
---- !u!114 &7292696261492785433 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: -6322183639531159035, guid: 71b77c23f643aa84187dec6066feb42e,
-    type: 3}
-  m_PrefabInstance: {fileID: 7292696261492785432}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 46c31319634c57747ac216da9b301582, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1001 &7298565698045154102
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -21085,6 +21057,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: Ghost red
+      objectReference: {fileID: 0}
+    - target: {fileID: 2271646472503394935, guid: a76b547b0ec7cdc4fa1c1392ed7e299b,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5662800568977303500, guid: a76b547b0ec7cdc4fa1c1392ed7e299b,
         type: 3}
@@ -21143,15 +21120,3 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: a76b547b0ec7cdc4fa1c1392ed7e299b, type: 3}
---- !u!114 &7298565698045154103 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: -8331962966461121174, guid: a76b547b0ec7cdc4fa1c1392ed7e299b,
-    type: 3}
-  m_PrefabInstance: {fileID: 7298565698045154102}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2c4c54c0db5a31547bdc5fcf86932b60, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 

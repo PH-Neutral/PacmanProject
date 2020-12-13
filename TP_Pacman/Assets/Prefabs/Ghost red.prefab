@@ -45,7 +45,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2c4c54c0db5a31547bdc5fcf86932b60, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 3
+  speed: 4
   speedRatio: 1
   target: {fileID: 0}
   IsVulnerable: 0

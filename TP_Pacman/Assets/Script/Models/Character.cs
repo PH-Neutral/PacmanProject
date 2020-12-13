@@ -16,12 +16,10 @@ public abstract class Character : MonoBehaviour {
     /// Move speed of player in cell/seconds.
     /// </summary>
     [SerializeField] protected float speed, speedRatio;
-
     protected Animator animator;
     protected Vector2Int _direction;
     protected Vector3 _startPosition, _endPosition;
     protected Vector2Int _lastCoord, _currentCoord, _nextCoord;
-
     protected GameManager gm; // reference to the GameManager for ease of use
 
     float _Delay {
@@ -35,12 +33,8 @@ public abstract class Character : MonoBehaviour {
 
     private void Start() {
         gm = GameManager.Instance;
-        _lastCoord = Coordinate;
-        _currentCoord = Coordinate;
-        _nextCoord = Coordinate;
-        //_endPosition = GameManager.Instance.CellToWorld(Coordinate);
-        _timer = _Delay;
         MakeAlive();
+        SetReady();
     }
 
     protected virtual void Update() {
@@ -101,6 +95,14 @@ public abstract class Character : MonoBehaviour {
             dirInt = 4; // moving up
         }
         animator.SetInteger("Direction", dirInt);
+    }
+
+    protected void SetReady() {
+        _lastCoord = Coordinate;
+        _currentCoord = Coordinate;
+        _nextCoord = Coordinate;
+        //_endPosition = GameManager.Instance.CellToWorld(Coordinate);
+        _timer = _Delay;
     }
 
     public void MakeDead() {
