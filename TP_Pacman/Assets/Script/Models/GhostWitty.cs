@@ -13,14 +13,14 @@ public class GhostWitty : Ghost {
         Vector2Int playerDir = gm.Player.Direction;
         int length = 0;
         Node searchNode = gm.GetNode(gm.Player.Coordinate);
-        Vector2Int targetCoord = searchNode.Coordinate;
-        while (playerDir != Vector2Int.zero && (searchNode = searchNode?.GetNeighbor(playerDir)) != null) {
+        Vector2Int targetCoord;
+        do {
             targetCoord = searchNode.Coordinate;
             if (length++ >= _predictivePathLength && (searchNode.Type == NodeType.Corner || searchNode.Type == NodeType.Crossroad)) {
                 break;
             }
-        }
-        return FindShorterPathDirection(Coordinate, possibleDirections.ToArray(), targetCoord);
+        } while(playerDir != Vector2Int.zero && (searchNode = searchNode.GetNeighbor(playerDir)) != null) ;
+            return FindShorterPathDirection(Coordinate, possibleDirections.ToArray(), targetCoord);
     }
 
     protected override void ApplyModifiers() {
