@@ -72,14 +72,9 @@ public abstract class Ghost : Character {
         ApplyModifiers();
     }
 
-    protected virtual Vector2Int ChooseDirection(List<Vector2Int> possibleDirections) {
-        // to be implemented by child class
-        return Direction;
-    }
+    protected abstract Vector2Int ChooseDirection(List<Vector2Int> possibleDirections);
 
-    protected virtual void ApplyModifiers() {
-        // to be implemented by child class
-    }
+    protected abstract void ApplyModifiers();
 
     protected Vector2Int FindShorterPathDirection(Vector2Int startCoord, Vector2Int[] directions, Vector2Int targetCoord) {
         int shorterPath = int.MaxValue;

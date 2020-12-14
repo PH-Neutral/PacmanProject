@@ -19,8 +19,11 @@ public class GhostWitty : Ghost {
             if (length++ >= _predictivePathLength && (searchNode.Type == NodeType.Corner || searchNode.Type == NodeType.Crossroad)) {
                 break;
             }
-        } while(playerDir != Vector2Int.zero && (searchNode = searchNode.GetNeighbor(playerDir)) != null) ;
-            return FindShorterPathDirection(Coordinate, possibleDirections.ToArray(), targetCoord);
+        } while(playerDir != Vector2Int.zero && (searchNode = searchNode.GetNeighbor(playerDir)) != null);
+        if (gm.GetNode(targetCoord) == null) {
+            targetCoord = gm.Player.Coordinate;
+        }
+        return FindShorterPathDirection(Coordinate, possibleDirections.ToArray(), targetCoord);
     }
 
     protected override void ApplyModifiers() {

@@ -13,7 +13,7 @@ public class GhostObsessive : Ghost {
     }
 
     protected override void ApplyModifiers() {
-        float ballsPercent = ((float)gm.RemainingBalls) / ((float)gm.MaxBalls);
+        float ballsPercent = gm.RemainingBalls / (float)(gm.MaxBalls);
         _speedRatio = 1 + (ballsPercent > 0.8f ? 0 : 0.05f) + (ballsPercent > 0.5f ? 0 : 0.05f);
     }
 }

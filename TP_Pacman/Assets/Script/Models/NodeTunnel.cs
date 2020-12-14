@@ -23,7 +23,7 @@ public class NodeTunnel : Node {
     }
 
     public override Node GetNeighbor(Vector2Int relativeCoordinate) {
-        //return base.GetNeighbor(relativeCoordinate);
+        if(relativeCoordinate == Vector2Int.zero) { return null; }
         Node neighbor = base.GetNeighbor(relativeCoordinate);
         Vector2Int searchCoord = Coordinate + relativeCoordinate;
         if (neighbor == null && searchCoord.y == LinkedTunnel.Coordinate.y 

@@ -115,7 +115,7 @@ public abstract class Character : MonoBehaviour {
     }
 
     public void MakeAlive() {
-        animator.speed = speed;
+        animator.speed = Speed;
         animator.SetBool("Dead", false);
     }
 

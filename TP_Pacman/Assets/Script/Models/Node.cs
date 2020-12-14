@@ -24,9 +24,9 @@ public class Node {
 
     public virtual Node GetNeighbor(Vector2Int relativeCoordinate) {
         if (relativeCoordinate == Vector2Int.zero) { return null; }
-        foreach(Node n in Neighbors) {
-            if (n.Coordinate == this.Coordinate + relativeCoordinate) {
-                return n;
+        for(int i=0; i<Neighbors.Count; i++) {
+            if (Neighbors[i].Coordinate == this.Coordinate + relativeCoordinate) {
+                return Neighbors[i];
             }
         }
         return null;

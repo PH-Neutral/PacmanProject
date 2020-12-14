@@ -33,7 +33,7 @@ public class GameManager : MonoBehaviour {
     [SerializeField] Vector2Int ghostLeaveSpawnerVector = Vector2Int.up * 2;
     [SerializeField] float ghostsFreeAtPercentBallsEaten = 0.3f;
     [SerializeField] Item prefabBall = null;
-    Tilemap tilemapItem = null, tilemapPath = null, tilemapWalls = null;
+    Tilemap tilemapIgnoreItem = null, tilemapPath = null, tilemapWalls = null;
     Dictionary<Vector2Int, Node> gridNodes = null;
     Dictionary<Vector2Int, Item> gridItems = null;
     private float _chrono;
@@ -46,7 +46,7 @@ public class GameManager : MonoBehaviour {
             Destroy(gameObject);
         }
 
-        tilemapItem = GameObject.Find("Tilemap_emptyAreas").GetComponent<Tilemap>();
+        tilemapIgnoreItem = GameObject.Find("Tilemap_emptyAreas").GetComponent<Tilemap>();
         tilemapPath = GameObject.Find("Tilemap_paths").GetComponent<Tilemap>();
         tilemapWalls = GameObject.Find("Tilemap_walls").GetComponent<Tilemap>();
 
@@ -316,7 +316,7 @@ public class GameManager : MonoBehaviour {
         gridItems = new Dictionary<Vector2Int, Item>();
         GameObject pool = CreatePool(prefabBall.name + " Pool");
         foreach(Vector2Int coord in gridNodes.Keys) {
-            if(!gridItems.ContainsKey(coord) && !tilemapItem.HasTile(new Vector3Int(coord.x, coord.y, 0))) {
+            if(!gridItems.ContainsKey(coord) && !tilemapIgnoreItem.HasTile((Vector3Int)coord)) {
                 SpawnItem(prefabBall, coord, pool.transform);
             }
         }
