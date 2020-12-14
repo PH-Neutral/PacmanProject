@@ -24,8 +24,8 @@ public class MenuManager : MonoBehaviour
     private void Start() {
         // +++ recover the settings from PlayerPref +++ //
         // recover language file
-        LanguageManager.LoadLanguage(Language.English);
-        UpdateMenuTexts();
+        //LanguageManager.LoadLanguage(Language.English);
+        //UpdateMenuTexts();
         // recover the highscores from local storage (System.IO here we come !)
     }
 
