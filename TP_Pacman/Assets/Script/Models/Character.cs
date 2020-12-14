@@ -12,20 +12,19 @@ public abstract class Character : MonoBehaviour {
         get { return _direction; }
         protected set { _direction = value; }
     }
-    /// <summary>
-    /// Move speed of player in cell/seconds.
-    /// </summary>
-    [SerializeField] protected float speed, speedRatio;
+    [SerializeField] protected float speed;
+    protected float _speedRatio = 1;
     protected Animator animator;
     protected Vector2Int _direction;
-    protected Vector3 _startPosition, _endPosition;
     protected Vector2Int _lastCoord, _currentCoord, _nextCoord;
     protected GameManager gm; // reference to the GameManager for ease of use
 
-    float _Delay {
-        get { return 1f / (speed * speedRatio); }
+    /// <summary>
+    /// Move speed of player in cell/seconds.
+    /// </summary>
+    public float Speed {
+        get { return speed * _speedRatio; }
     }
-    float _timer = 0f;
 
     protected virtual void Awake() {
         animator = GetComponent<Animator>();
@@ -43,33 +42,22 @@ public abstract class Character : MonoBehaviour {
 
         DoEachUpdate();
 
-        _timer += Time.deltaTime;
-        if(_timer >= _Delay) {
-            _timer -= _Delay;
-            transform.position = gm.CellToWorld(_nextCoord); // place character at center of cell
-
+        if (UpdateMovement(_nextCoord)) {
+            //Debug.Log(this + " is at coord");
+            _currentCoord = Coordinate;
             DoWhenCellReached();
-
+            _lastCoord = _currentCoord;
             if(gm.GetNode(Coordinate).HasNeighbor(Direction)) {
                 // if there is a cell in the current direction, then start moving towards it
                 _nextCoord = Coordinate + Direction;
                 //_endPosition = gm.CellToWorld(Coordinate + Direction);
-            } else {
-                _timer = _Delay;
+                UpdateDirectionAnimation();
             }
-            _currentCoord = Coordinate;
-            _lastCoord = _currentCoord;
-            //_startPosition = transform.position; // update startPosition
-            //_lastNode = gm.GetNode(Coordinate);
-            UpdateDirectionAnimation();
         } else {
-            Vector3 startPos = gm.CellToWorld(_currentCoord);
-            Vector3 endPos = gm.CellToWorld(_nextCoord);
-            // ++ Character is moving toward the cell ++ //
-            transform.position = Vector3.Lerp(startPos, endPos, _timer * speed);
-            //Debug.Log(name + " coords: " + Coordinate.ToString() + "; position: " + transform.position.ToString() + "; startPos: " + _startPosition.ToString() + "; endPos: " + _endPosition.ToString());
+            //Debug.Log(this + " is NOT at coord");
             Node nodeAtStart;
-            if (gm.GetNode(Coordinate) == null && (nodeAtStart = gm.GetNode(_currentCoord)).Type == NodeType.Tunnel) {
+            if(gm.GetNode(Coordinate) == null && (nodeAtStart = gm.GetNode(_currentCoord)).Type == NodeType.Tunnel) {
+                Vector3 startPos = gm.CellToWorld(_currentCoord);
                 NodeTunnel nt1 = nodeAtStart as NodeTunnel;
                 NodeTunnel nt2 = nt1.LinkedTunnel;
                 Vector2Int newStartCoord = nt2.Coordinate + Vector2Int.left * (int)Mathf.Sign(nt1.Coordinate.x - nt2.Coordinate.x);
@@ -77,10 +65,27 @@ public abstract class Character : MonoBehaviour {
                 transform.position -= startPos - newStartPos;
                 _currentCoord = newStartCoord;
                 _nextCoord = nt2.Coordinate;
-                //_startPosition = c2;
-                //_endPosition = gm.CellToWorld(nt2.Coordinate);
             }
         }
+    }
+
+    public bool UpdateMovement(Vector2Int targetCoord) {
+        return UpdateMovement(gm.CellToWorld(targetCoord));
+    }
+    /// <summary>
+    /// Moves gameobject towards target point in world space with provided speed.
+    /// </summary>
+    /// <param name="targetPoint">The position in world space to move toward.</param>
+    /// <param name="speed">The speed applied to the movement.</param>
+    /// <returns>True when gameobject arrived at targetPoint.</returns>
+    public bool UpdateMovement(Vector3 targetPoint) {
+        float remainingDistance = Vector3.Distance(transform.position, targetPoint);
+        if (remainingDistance != 0) {
+            //Debug.Log("Speed = " + Speed);
+            transform.position = Vector3.Lerp(transform.position, targetPoint, Time.deltaTime * Speed * gm.Grid.cellSize.x / remainingDistance);
+            return false;
+        }
+        return true;
     }
 
     void UpdateDirectionAnimation() {
@@ -102,7 +107,6 @@ public abstract class Character : MonoBehaviour {
         _currentCoord = Coordinate;
         _nextCoord = Coordinate;
         //_endPosition = GameManager.Instance.CellToWorld(Coordinate);
-        _timer = _Delay;
     }
 
     public void MakeDead() {

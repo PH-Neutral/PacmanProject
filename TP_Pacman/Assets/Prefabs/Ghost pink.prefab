@@ -46,7 +46,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   speed: 3
-  speedRatio: 1
   target: {fileID: 0}
   IsVulnerable: 0
 --- !u!212 &1719883823718939955
@@ -110,7 +109,7 @@ Animator:
   m_GameObject: {fileID: 3663363001055378445}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: c81109facd8dd7f418a7adee6d1e1747, type: 2}
+  m_Controller: {fileID: 9100000, guid: 7b3b030e5f127aa46ae6d68230fbefc4, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0

@@ -46,7 +46,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   speed: 3
-  speedRatio: 1
   target: {fileID: 0}
   IsVulnerable: 0
 --- !u!212 &4219347741942629193

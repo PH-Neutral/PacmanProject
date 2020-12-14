@@ -3,15 +3,15 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public abstract class Ghost : Character {
-    public Player target;
     public GhostType Type {
         get; protected set;
     }
-    public bool IsVulnerable = false;
-
     public bool IsWaiting {
         get; set;
     }
+    public Player target;
+    public bool IsVulnerable = false;
+
 
     List<Vector3> _pathOutOfSpawner;
 
@@ -25,7 +25,7 @@ public abstract class Ghost : Character {
             base.Update();
         } else if (!IsWaiting) {
             //Debug.Log(this + " is not waiting anymore !");
-            if (gm.UpdateMovementUntethered(transform, _pathOutOfSpawner[0], speed)) {
+            if (UpdateMovement(_pathOutOfSpawner[0])) {
                 _pathOutOfSpawner.RemoveAt(0);
                 if (_pathOutOfSpawner.Count == 0) {
                     target = gm.Player;
@@ -59,7 +59,7 @@ public abstract class Ghost : Character {
         List<Vector2Int> possibleDirections = new List<Vector2Int>();
         for(int i = 0; i < PacTools.v2IntDirections.Length; i++) {
             Vector2Int dir = PacTools.v2IntDirections[i];
-            if(_lastCoord != Coordinate + dir && currentNode.HasNeighbor(dir)) {
+            if(Coordinate + dir != _lastCoord && currentNode.HasNeighbor(dir)) {
                 possibleDirections.Add(dir);
             }
         }

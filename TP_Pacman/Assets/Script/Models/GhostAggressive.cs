@@ -26,10 +26,10 @@ public class GhostAggressive : Ghost {
         Vector2Int searchCoord = Coordinate;
         while(Direction != Vector2Int.zero && gm.GetNode(searchCoord += Direction) != null) {
             if(searchCoord == gm.Player.Coordinate) {
-                speedRatio = 1.15f;
+                _speedRatio = 1.15f;
                 return;
             }
         }
-        speedRatio = 1;
+        _speedRatio = 1;
     }
 }

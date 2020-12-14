@@ -20,7 +20,7 @@ public class GameManager : MonoBehaviour {
         get; private set;
     }
 
-    Grid Grid {
+    public Grid Grid {
         get { return tilemapPath.layoutGrid; }
     }
     List<Ghost> Ghosts {
@@ -168,7 +168,7 @@ public class GameManager : MonoBehaviour {
     }
 
     public Vector3 CellToWorld(Vector2Int gridPosition) {
-        return tilemapPath.GetCellCenterWorld(new Vector3Int(gridPosition.x, gridPosition.y, 0));
+        return tilemapPath.GetCellCenterWorld((Vector3Int)gridPosition);
         //return new Vector3((gridPosition.x + 0.5f) * MapScale.x, (gridPosition.y + 0.5f) * MapScale.y) + transform.position;
     }
 
@@ -374,15 +374,4 @@ public class GameManager : MonoBehaviour {
         mainCam.transform.position = cameraPos;
     }
 
-    /// <summary>
-    /// Moves gameobject towards target point in world space with provided speed.
-    /// </summary>
-    /// <param name="targetPoint">The position in world space to move toward.</param>
-    /// <param name="speed">The speed applied to the movement.</param>
-    /// <returns>True when gameobject arrived at targetPoint.</returns>
-    public bool UpdateMovementUntethered(Transform goTransform, Vector3 targetPoint, float speed) {
-        float remainingDistance = Vector3.Distance(goTransform.position, targetPoint);
-        goTransform.position = Vector3.Lerp(goTransform.position, targetPoint, Time.deltaTime * speed * Grid.cellSize.x / remainingDistance);
-        return goTransform.position == targetPoint;
-    }
 }

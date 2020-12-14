@@ -7,7 +7,7 @@ public class Player : Character {
         get; set;
     }
 
-    Vector2Int nextDir;
+    Vector2Int _nextDir;
 
     protected override void DoEachUpdate() {
         //GameManager gm = GameManager.Instance;
@@ -22,7 +22,7 @@ public class Player : Character {
             if(nextNode.HasNeighbor(inputs)) {
                 // if there is a cell in this direction, choose this direction
                 Direction = inputs;
-                nextDir = Vector2Int.zero;
+                _nextDir = Vector2Int.zero;
             }
         }
 
@@ -30,12 +30,12 @@ public class Player : Character {
             // if cell in this direction is a wall, then stop moving
             Direction = Vector2Int.zero;
         } else if(inputs != Vector2Int.zero && !nextNode.HasNeighbor(inputs)) {
-            nextDir = inputs;
+            _nextDir = inputs;
         }
 
-        if (nextNode.HasNeighbor(nextDir)) {
-            Direction = nextDir;
-            nextDir = Vector2Int.zero;
+        if (nextNode.HasNeighbor(_nextDir)) {
+            Direction = _nextDir;
+            _nextDir = Vector2Int.zero;
         }
         //Debug.Log("Direction prepared! New: " + Direction.ToString() + " based on inputs: " + inputs.ToString());
     }
