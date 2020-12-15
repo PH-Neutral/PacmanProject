@@ -46,7 +46,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   speed: 3
-  target: {fileID: 0}
+  playerTarget: {fileID: 0}
+  scatterTarget: {x: -14, y: -10}
   IsVulnerable: 0
 --- !u!212 &7543565918012129368
 SpriteRenderer:
@@ -109,7 +110,7 @@ Animator:
   m_GameObject: {fileID: 5600368218252804454}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: 688460b1eead78a42bf84e392b261548, type: 2}
+  m_Controller: {fileID: 9100000, guid: af9a9bf97463f5a4eafbe7bfc2776455, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0

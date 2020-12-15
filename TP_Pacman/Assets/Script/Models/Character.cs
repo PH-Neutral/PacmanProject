@@ -51,7 +51,7 @@ public abstract class Character : MonoBehaviour {
                 // if there is a cell in the current direction, then start moving towards it
                 _nextCoord = Coordinate + Direction;
                 //_endPosition = gm.CellToWorld(Coordinate + Direction);
-                UpdateDirectionAnimation();
+                UpdateAnimator();
             }
         } else {
             //Debug.Log(this + " is NOT at coord");
@@ -82,13 +82,13 @@ public abstract class Character : MonoBehaviour {
         float remainingDistance = Vector3.Distance(transform.position, targetPoint);
         if (remainingDistance != 0) {
             //Debug.Log("Speed = " + Speed);
-            transform.position = Vector3.Lerp(transform.position, targetPoint, Time.deltaTime * Speed * gm.Grid.cellSize.x / remainingDistance);
+            transform.position = Vector3.Lerp(transform.position, targetPoint, gm.DistanceCellToWorld(Time.deltaTime * Speed) / remainingDistance);
             return false;
         }
         return true;
     }
 
-    void UpdateDirectionAnimation() {
+    protected virtual void UpdateAnimator() {
         int dirInt = 0; // idle
         if(Direction == Vector2Int.right) {
             dirInt = 1; // moving right
@@ -102,7 +102,7 @@ public abstract class Character : MonoBehaviour {
         animator.SetInteger("Direction", dirInt);
     }
 
-    protected void SetReady() {
+    protected virtual void SetReady() {
         _lastCoord = Coordinate;
         _currentCoord = Coordinate;
         _nextCoord = Coordinate;

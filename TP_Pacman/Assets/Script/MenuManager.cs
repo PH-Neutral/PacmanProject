@@ -25,10 +25,10 @@ public class MenuManager : MonoBehaviour
     private void Start() {
         // +++ recover the settings from PlayerPref +++ //
         // recover the highscores from local storage (System.IO here we come !)
-        Debug.Log("Scene loaded!");
+        //Debug.Log("Scene loaded!");
         // select first button (only if on mainMenu)
         if (SceneManager.GetActiveScene().buildIndex == 0) {
-            ChooseLanguage(Language.French);
+            ChooseLanguage(Language.English);
             SelectButton(startButton);
         }
     }
@@ -45,9 +45,10 @@ public class MenuManager : MonoBehaviour
         LanguageManager.UpdateTexts(texts);
     }
 
-    public void UpdateOverlay(float time, int score, int remainingBalls) {
-        ScoreText.text = score.ToString();
+    public void UpdateOverlay(float time, int score, int highscore, int remainingBalls) {
         TimeText.text = TimeSpan.FromSeconds(time).ToString("hh':'mm':'ss");
+        ScoreText.text = score.ToString();
+        HighscoreText.text = highscore.ToString();
         BallsText.text = remainingBalls.ToString();
         //Debug.Log("Time: " + TimeSpan.FromSeconds(time).ToString("hh':'mm':'ss"));
     }

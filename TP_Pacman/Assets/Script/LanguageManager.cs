@@ -41,9 +41,9 @@ public class LanguageManager {
         InitializeDefaultValues();
         currentLanguage = language;
         textAssociations = new Dictionary<string, string>();
+        WriteLanguageFileDefault();
         if (!LoadLanguageFile(language)) {
             LoadLanguageFileDefault();
-            WriteLanguageFile(language);
             currentLanguage = defaultLanguage;
         }
     }
@@ -70,10 +70,26 @@ public class LanguageManager {
         for(int i = 0; i < lines.Length; i++) {
             //Debug.Log(line);
             string[] decodedLine = DecodeLine(lines[i]);
-            textAssociations[decodedLine[0]] = decodedLine[1];
+            if (decodedLine != null) {
+                textAssociations[decodedLine[0]] = decodedLine[1];
+            }
             //Debug.Log("line: " + lines[i] + "; key: " + decodedLine[0] + "; value: " + decodedLine[1]);
         }
         return true;
+    }
+
+    void WriteLanguageFileDefault() {
+        string fileName = "defaultLanguageFile" + fileExtension;
+        string[] lines = new string[keyWords.Length];
+        string[] values = languageValues[(int)defaultLanguage];
+        for(int i = 0; i < lines.Length; i++) {
+            string value = i < values.Length ? values[i] : missingValue;
+            if(value == "") {
+                value = missingValue;
+            }
+            lines[i] = EncodeLine(keyWords[i].ToString(), value);
+        }
+        IOTools.WriteFile(folderPath, fileName, lines);
     }
 
     void WriteLanguageFile(Language language) {
@@ -96,6 +112,10 @@ public class LanguageManager {
     string[] DecodeLine(string line) {
         string key = "";
         string workingString = "";
+        line.TrimStart();
+        if (line.Length > 0 && line[0] == '#') {
+            return null;
+        }
         for (int i=0; i<line.Length; i++) {
             if (line[i] == '=') {
                 workingString = line.Substring(i + 1, line.Length - (i + 1));
@@ -138,17 +158,25 @@ public class LanguageManager {
 
     static Language defaultLanguage = Language.English;
     static LangKeyWord[] keyWords = new LangKeyWord[] {
-        LangKeyWord.mainMenu_title, LangKeyWord.mainMenu_subtitle, LangKeyWord.button_start, LangKeyWord.button_settings, LangKeyWord.button_credits, 
+        LangKeyWord.language,
+        LangKeyWord.mainMenu_title, LangKeyWord.mainMenu_subtitle, LangKeyWord.button_start, LangKeyWord.button_settings, LangKeyWord.button_credits,
         LangKeyWord.button_exitApp, LangKeyWord.button_retry, LangKeyWord.button_menu,
-        LangKeyWord.gameOverlay_score, LangKeyWord.gameOverlay_highscore, LangKeyWord.gameOverlay_elapsedTime, LangKeyWord.gameOverlay_remainingBalls, LangKeyWord.gameOverlay_victoryTitle, 
-        LangKeyWord.gameOverlay_victoryDescription, LangKeyWord.gameOverlay_defeatTitle, LangKeyWord.gameOverlay_defeatDescription
+        LangKeyWord.gameOverlay_score, LangKeyWord.gameOverlay_highscore, LangKeyWord.gameOverlay_elapsedTime, LangKeyWord.gameOverlay_remainingBalls, LangKeyWord.gameOverlay_victoryTitle,
+        LangKeyWord.gameOverlay_victoryDescription, LangKeyWord.gameOverlay_defeatTitle, LangKeyWord.gameOverlay_defeatDescription,
+        LangKeyWord.inProgress,
+        LangKeyWord.creditMenu_title, LangKeyWord.creditMenu_developpedBy,
+        LangKeyWord.settingsMenu_title
     };
     static string missingValue = "[Missing]";
     static string[][] languageValues;
     static string[] englishValues = new string[] {
+        "English",
         "Pacman", "Unity practical work", "Start", "Settings", "Credits", "Exit", "Retry", "Menu", "SCORE:", "HIGHSCORE:", "TIME:", "REMAINING BALLS:", 
         "VICTORY!", "You managed to get all the pac-gums while avoiding those pesky ghosts. Congratulation.", 
-        "DEFEAT...", "It seems the ghosts got to you and killed you. Better luck next time."
+        "DEFEAT...", "It seems the ghosts got to you and killed you. Better luck next time.",
+        "In progress...",
+        "Credits", "Developped by:",
+        "Settings"
     };
 }
 
@@ -159,5 +187,5 @@ public enum Language {
 public enum LangKeyWord {
     mainMenu_title, mainMenu_subtitle, button_start, button_settings, button_credits, button_exitApp, button_retry, button_menu,
     gameOverlay_score, gameOverlay_highscore, gameOverlay_elapsedTime, gameOverlay_remainingBalls, gameOverlay_victoryTitle, gameOverlay_defeatTitle, gameOverlay_victoryDescription,
-    gameOverlay_defeatDescription
+    gameOverlay_defeatDescription, language, inProgress, creditMenu_developpedBy, creditMenu_title, settingsMenu_title
 }

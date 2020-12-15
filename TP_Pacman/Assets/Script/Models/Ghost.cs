@@ -13,6 +13,9 @@ public abstract class Ghost : Character {
         get {
             return IsVulnerable ? false : _isInChaseMode;
         }
+        private set {
+            _isInChaseMode = value;
+        }
     }
     public Player playerTarget;
     public Vector2Int scatterTarget;
@@ -21,7 +24,7 @@ public abstract class Ghost : Character {
 
     List<Vector3> _pathOutOfSpawner;
     float _vulnerableTimer = 0, _vulnerableDelay = 20f; // 20 seconds ? look it up
-    float _chaseTimer = 0, _chaseDelay = 20f, _scatterDelay = 7f;
+    float _scatterChaseTimer = 0, _chaseDelay = 20f, _scatterDelay = 7f;
     bool _isInChaseMode = true; // as opposed to scatter mode
 
     protected override void Awake() {
@@ -36,6 +39,10 @@ public abstract class Ghost : Character {
                 MakeVulnerable(false);
             }
         } else {
+            _scatterChaseTimer -= Time.deltaTime;
+            if(_scatterChaseTimer <= 0) {
+                SwitchChaseMode(!Chase);
+            }
 
         }
         if (playerTarget != null) {
@@ -46,7 +53,7 @@ public abstract class Ghost : Character {
                 _pathOutOfSpawner.RemoveAt(0);
                 if (_pathOutOfSpawner.Count == 0) {
                     playerTarget = gm.Player;
-                    Debug.Log(this + " has left the house, the hunt is ON!");
+                    //Debug.Log(this + " has left the house, the hunt is ON!");
                     SetReady();
                 }
             }
@@ -83,33 +90,94 @@ public abstract class Ghost : Character {
         if (possibleDirections.Count == 1) {
             Direction = possibleDirections[0];
         } else {
-            if (Chase) {
+            if (IsVulnerable) {
+                Direction = FindLongerPathDirection(Coordinate, possibleDirections.ToArray(), playerTarget.Coordinate);
+            } else if (Chase) {
                 Direction = ChooseDirection(possibleDirections);
             } else {
                 Direction = FindShorterPathDirection(Coordinate, possibleDirections.ToArray(), scatterTarget);
             }
         }
 
-        if (Chase) {
+        if (!IsVulnerable && Chase) {
             ApplyModifiers();
         }
+    }
+
+    protected override void UpdateAnimator() {
+        base.UpdateAnimator();
+        animator.SetBool("Vulnerable", IsVulnerable);
+    }
+
+    protected override void SetReady() {
+        base.SetReady();
+        SwitchChaseMode(Chase);
     }
 
     protected abstract Vector2Int ChooseDirection(List<Vector2Int> possibleDirections);
 
     protected abstract void ApplyModifiers();
 
+    protected Vector2Int FindLongerPathDirection(Vector2Int startCoord, Vector2Int[] directions, Vector2Int targetCoord) {
+        int longerPath = int.MinValue;
+        int longerIndex = -1;
+        for(int i = 0; i < directions.Length; i++) {
+            List<Node> path = gm.GetPath(startCoord + directions[i], targetCoord);
+            if (path == null) { continue; }
+            int pathLength = path.Count;
+            if(pathLength > longerPath) {
+                longerPath = pathLength;
+                longerIndex = i;
+            }
+        }
+        if (longerIndex == -1) {
+            return FindLongerPathDirectionVector(startCoord, directions, targetCoord);
+        }
+        return directions[longerIndex];
+    }
+
     protected Vector2Int FindShorterPathDirection(Vector2Int startCoord, Vector2Int[] directions, Vector2Int targetCoord) {
         int shorterPath = int.MaxValue;
         int shorterIndex = -1;
         for(int i = 0; i < directions.Length; i++) {
-            int pathLength = gm.GetPath(startCoord + directions[i], targetCoord).Count;
+            List<Node> path = gm.GetPath(gm.GetNode(startCoord).GetNeighbor(directions[i]).Coordinate, targetCoord);
+            if(path == null) { continue; }
+            int pathLength = path.Count;
             if(pathLength < shorterPath) {
                 shorterPath = pathLength;
                 shorterIndex = i;
             }
         }
+        if(shorterIndex == -1) {
+            return FindShorterPathDirectionVector(startCoord, directions, targetCoord);
+        }
         return directions[shorterIndex];
+    }
+
+    protected Vector2Int FindLongerPathDirectionVector(Vector2Int startCoord, Vector2Int[] directions, Vector2Int targetCoord) {
+        float maxLength = float.MinValue;
+        int maxIndex = -1;
+        for(int i = 0; i < directions.Length; i++) {
+            float distance = Vector2Int.Distance(startCoord + directions[i], targetCoord);
+            if(distance > maxLength) {
+                maxLength = distance;
+                maxIndex = i;
+            }
+        }
+        return directions[maxIndex];
+    }
+
+    protected Vector2Int FindShorterPathDirectionVector(Vector2Int startCoord, Vector2Int[] directions, Vector2Int targetCoord) {
+        float minLength = float.MaxValue;
+        int minIndex = -1;
+        for(int i = 0; i < directions.Length; i++) {
+            float distance = Vector2Int.Distance(startCoord + directions[i], targetCoord);
+            if(distance < minLength) {
+                minLength = distance;
+                minIndex = i;
+            }
+        }
+        return directions[minIndex];
     }
 
     public void MakeVulnerable(bool vulnerable) {
@@ -121,14 +189,19 @@ public abstract class Ghost : Character {
             _nextCoord = lc;
             // start countdown
             _vulnerableTimer = _vulnerableDelay;
-            // make scatter for longer time ?
-
             // change animator to reflect vulnerable state
+            Debug.Log(this + "\'s animator should be back to normal.");
         } else {
-            // reset scatter mode
-
+            // reset mode to "chase"
+            SwitchChaseMode(true);
             // change animator to reflect normal state
+            Debug.Log(this + "\'s animator should be back to normal.");
         }
+    }
+
+    void SwitchChaseMode(bool chaseMode) {
+        _scatterChaseTimer = chaseMode ? _chaseDelay : _scatterDelay;
+        Chase = chaseMode;
     }
 
     public void SetOutOfSpawnerPath(List<Vector3> path) {

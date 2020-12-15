@@ -10,16 +10,7 @@ public class GhostAggressive : Ghost {
     }
 
     protected override Vector2Int ChooseDirection(List<Vector2Int> possibleDirections) {
-        float minLength = float.MaxValue;
-        int minIndex = -1;
-        for (int i=0; i< possibleDirections.Count; i++) {
-            float distance = Vector2Int.Distance(Coordinate + possibleDirections[i], gm.Player.Coordinate + gm.Player.Direction * 2);
-            if (distance < minLength) {
-                minLength = distance;
-                minIndex = i;
-            }
-        }
-        return possibleDirections[minIndex];
+        return FindShorterPathDirectionVector(Coordinate, possibleDirections.ToArray(), gm.Player.Coordinate + gm.Player.Direction * 2);
     }
 
     protected override void ApplyModifiers() {

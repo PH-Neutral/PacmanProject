@@ -36,6 +36,9 @@ public class GameManager : MonoBehaviour {
     Tilemap tilemapIgnoreItem = null, tilemapPath = null, tilemapWalls = null;
     Dictionary<Vector2Int, Node> gridNodes = null;
     Dictionary<Vector2Int, Item> gridItems = null;
+    readonly string keyHighscore = "highscore";
+    int highscore = 0;
+
     private float _chrono;
 
 
@@ -81,7 +84,7 @@ public class GameManager : MonoBehaviour {
             if(item.type != ItemType.Bonus) {
                 RemainingBalls--;
                 if (item.type == ItemType.PowerUp) {
-                    // make ghosts vulnerable
+                    MakeGhostsVulnerable();
                 }
             }
             gridItems.Remove(Player.Coordinate);
@@ -132,20 +135,24 @@ public class GameManager : MonoBehaviour {
 
     void UpdateOverlay()
     {
-        MenuManager.Instance.UpdateOverlay(_chrono, Player.Score, RemainingBalls);
+        MenuManager.Instance.UpdateOverlay(_chrono, Player.Score, highscore, RemainingBalls);
     }
 
     void WinGame() {
         MenuManager.Instance.ShowVictory();
         GamePaused = true;
+        SaveHighscore();
     }
 
     void LoseGame() {
         MenuManager.Instance.ShowGameover();
         GamePaused = true;
+        SaveHighscore();
     }
 
     public void StartGame() {
+        LoadHighscore();
+
         InitializeGraph();
         AdaptCamera();
         SpawnBalls();
@@ -168,6 +175,18 @@ public class GameManager : MonoBehaviour {
         Destroy(Player.gameObject);
 
         StartGame();
+    }
+
+    void LoadHighscore() {
+        highscore = PlayerPrefs.HasKey(keyHighscore) ? PlayerPrefs.GetInt(keyHighscore) : 0;
+    }
+
+    void SaveHighscore() {
+        if (Player.Score > highscore) {
+            highscore = Player.Score;
+        }
+        PlayerPrefs.SetInt(keyHighscore, highscore);
+        PlayerPrefs.Save();
     }
 
     public Node GetNode(Vector2Int coordinate) {
@@ -194,8 +213,13 @@ public class GameManager : MonoBehaviour {
         //return new Vector2Int(Mathf.FloorToInt(worldPosition.x / MapScale.x - MapScale.x * 0.5f), Mathf.FloorToInt(worldPosition.y / MapScale.y - MapScale.y * 0.5f));
     }
 
-    public Vector3 DistanceCellToWorld(Vector2Int vectorGrid) {
-        return new Vector3(vectorGrid.x * Grid.cellSize.x, vectorGrid.y * Grid.cellSize.y);
+    public Vector3 VectorCellToWorld(Vector2Int vectorGrid) => VectorCellToWorld((Vector3Int)vectorGrid);
+    public Vector3 VectorCellToWorld(Vector3 vectorGrid) {
+        return new Vector3(vectorGrid.x * Grid.cellSize.x, vectorGrid.y * Grid.cellSize.y, vectorGrid.z * Grid.cellSize.z);
+    }
+
+    public float DistanceCellToWorld(float distanceGrid) {
+        return distanceGrid * Grid.cellSize.x;
     }
 
     public List<Node> GetPath(Vector2Int from, Vector2Int to) {
@@ -232,8 +256,9 @@ public class GameManager : MonoBehaviour {
             }
         }
         // Clean the nodes
-        foreach(Node n in gridNodes.Values) {
-            n.Clean();
+        List<Node> nodes = new List<Node>(gridNodes.Values);
+        for(int i=0; i<nodes.Count; i++) {
+            nodes[i].Clean();
         }
         // return the path
         return path;
@@ -350,7 +375,7 @@ public class GameManager : MonoBehaviour {
         Ghosts = new List<Ghost>();
         GameObject pool = CreatePool("Ghost Pool");
         Vector3 bound1 = CellToWorld(ghostSpawnBounds[0]), bound2 = CellToWorld(ghostSpawnBounds[1]);
-        Vector3 path1 = Vector3.Lerp(bound1, bound2, 0.5f), path2 = path1 + DistanceCellToWorld(ghostLeaveSpawnerVector), path3 = CellToWorld(WorldToCell(path2));
+        Vector3 path1 = Vector3.Lerp(bound1, bound2, 0.5f), path2 = path1 + VectorCellToWorld(ghostLeaveSpawnerVector), path3 = CellToWorld(WorldToCell(path2));
         for (int i=0; i<prefabGhosts.Length; i++) {
             Ghost ghost = Instantiate(prefabGhosts[i], Vector3.Lerp(bound1, bound2, i / (float)(prefabGhosts.Length - 1)), Quaternion.identity, pool.transform);
             ghost.SetOutOfSpawnerPath(new List<Vector3> { path1, path2, path3 });

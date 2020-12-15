@@ -46,7 +46,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   speed: 3
-  target: {fileID: 0}
+  playerTarget: {fileID: 0}
+  scatterTarget: {x: 13, y: -10}
   IsVulnerable: 0
   _predictivePathLength: 4
 --- !u!212 &5072235659423546042

@@ -9,9 +9,6 @@ public class GhostLazy : Ghost {
     }
 
     protected override Vector2Int ChooseDirection(List<Vector2Int> possibleDirections) {
-        if (possibleDirections.Count == 1) {
-            return possibleDirections[Random.Range(0, possibleDirections.Count)];
-        }
         List<Vector2Int> directions = new List<Vector2Int>(possibleDirections);
         for(int i = 0; i < possibleDirections.Count; i++) {
             Vector2Int dir = possibleDirections[i];

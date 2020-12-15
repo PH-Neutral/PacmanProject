@@ -7,7 +7,7 @@ using UnityEngine;
 public static class IOTools {
 
     public static string GetFullPath(string folderPath, string fileName = "") {
-        string parentDirectoryName = Directory.GetParent(Directory.GetCurrentDirectory()).Parent.FullName;
+        string parentDirectoryName = Directory.GetCurrentDirectory();
         //Debug.Log("Parent Directory: " + parentDirectoryName);
         return parentDirectoryName + folderPath + '/' + fileName;
     }
