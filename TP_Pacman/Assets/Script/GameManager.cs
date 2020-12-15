@@ -65,24 +65,36 @@ public class GameManager : MonoBehaviour {
     private void Update() {
         if (GamePaused) { return; }
         _chrono += Time.deltaTime;
+        CheckCollisionWithItems();
+        UpdateOverlay();
+        CheckCollisionWithGhosts();
+        CheckForVictory();
+        CheckForGhostActivation();
+    }
 
-        // ++ Check collision between player and balls ++ //
+    void CheckCollisionWithItems() {
+        // ++ Check collision between player and items ++ //
         Item item;
         if((item = GetItem(Player.Coordinate)) != null) {
-            // if there is an item at these coords
-            // >>> check what kind of item it is
+            Player.Score += item.pointValue;
+            // check the kind of item it is
+            if(item.type != ItemType.Bonus) {
+                RemainingBalls--;
+                if (item.type == ItemType.PowerUp) {
+                    // make ghosts vulnerable
+                }
+            }
             gridItems.Remove(Player.Coordinate);
             Destroy(item.gameObject);
-            Player.Score++;
-            RemainingBalls--;
 
         }
-        UpdateOverlay();
+    }
 
+    void CheckCollisionWithGhosts() {
         // ++ Check collision between player and ghosts ++ //
         for(int i = 0; i < Ghosts.Count; i++) {
             if(Player.Coordinate == Ghosts[i].Coordinate) {
-                if (Ghosts[i].IsVulnerable) {
+                if(Ghosts[i].IsVulnerable) {
                     Ghosts[i].MakeDead();
                 } else {
                     Player.MakeDead();
@@ -90,19 +102,37 @@ public class GameManager : MonoBehaviour {
                 }
             }
         }
+    }
 
+    void CheckForVictory() {
         // ++ Check if every ball has been eaten ++ //
-        if (RemainingBalls <= 0)
-        {
+        if(RemainingBalls <= 0) {
             WinGame();
         }
+    }
 
-        CheckForGhostActivation();
+    void CheckForGhostActivation() {
+        //float maxPercent = MaxBalls * ghostsFreeAtPercentBallsEaten;
+        float currentPercent = 1 - RemainingBalls / (float)MaxBalls;
+        for(int i = 0; i < Ghosts.Count; i++) {
+            float percentToActivate = Mathf.Lerp(0, ghostsFreeAtPercentBallsEaten, i / (float)(Ghosts.Count - 1));
+            if(currentPercent >= percentToActivate) {
+                Ghosts[i].IsWaiting = false;
+            }
+            //Debug.Log("percentToActivate = " + percentToActivate + "; currentPercent = " + currentPercent);
+        }
+
+    }
+
+    void MakeGhostsVulnerable() {
+        for (int i=0; i<Ghosts.Count; i++) {
+            Ghosts[i].MakeVulnerable(true);
+        }
     }
 
     void UpdateOverlay()
     {
-        MenuManager.Instance.Update_Overlay(_chrono, Player.Score, RemainingBalls);
+        MenuManager.Instance.UpdateOverlay(_chrono, Player.Score, RemainingBalls);
     }
 
     void WinGame() {
@@ -138,19 +168,6 @@ public class GameManager : MonoBehaviour {
         Destroy(Player.gameObject);
 
         StartGame();
-    }
-
-    void CheckForGhostActivation() {
-        //float maxPercent = MaxBalls * ghostsFreeAtPercentBallsEaten;
-        float currentPercent = 1 - RemainingBalls / (float)MaxBalls;
-        for(int i=0; i<Ghosts.Count; i++) {
-            float percentToActivate = Mathf.Lerp(0, ghostsFreeAtPercentBallsEaten, i / (float)(Ghosts.Count - 1));
-            if (currentPercent >= percentToActivate) {
-                Ghosts[i].IsWaiting = false;
-            }
-            //Debug.Log("percentToActivate = " + percentToActivate + "; currentPercent = " + currentPercent);
-        }
-
     }
 
     public Node GetNode(Vector2Int coordinate) {

@@ -9,11 +9,20 @@ public abstract class Ghost : Character {
     public bool IsWaiting {
         get; set;
     }
-    public Player target;
+    public bool Chase {
+        get {
+            return IsVulnerable ? false : _isInChaseMode;
+        }
+    }
+    public Player playerTarget;
+    public Vector2Int scatterTarget;
     public bool IsVulnerable = false;
 
 
     List<Vector3> _pathOutOfSpawner;
+    float _vulnerableTimer = 0, _vulnerableDelay = 20f; // 20 seconds ? look it up
+    float _chaseTimer = 0, _chaseDelay = 20f, _scatterDelay = 7f;
+    bool _isInChaseMode = true; // as opposed to scatter mode
 
     protected override void Awake() {
         base.Awake();
@@ -21,14 +30,22 @@ public abstract class Ghost : Character {
     }
 
     protected override void Update() {
-        if (target != null) {
+        if (IsVulnerable) {
+            _vulnerableTimer -= Time.deltaTime;
+            if (_vulnerableTimer <= 0) {
+                MakeVulnerable(false);
+            }
+        } else {
+
+        }
+        if (playerTarget != null) {
             base.Update();
         } else if (!IsWaiting) {
             //Debug.Log(this + " is not waiting anymore !");
             if (UpdateMovement(_pathOutOfSpawner[0])) {
                 _pathOutOfSpawner.RemoveAt(0);
                 if (_pathOutOfSpawner.Count == 0) {
-                    target = gm.Player;
+                    playerTarget = gm.Player;
                     Debug.Log(this + " has left the house, the hunt is ON!");
                     SetReady();
                 }
@@ -66,10 +83,16 @@ public abstract class Ghost : Character {
         if (possibleDirections.Count == 1) {
             Direction = possibleDirections[0];
         } else {
-            Direction = ChooseDirection(possibleDirections);
+            if (Chase) {
+                Direction = ChooseDirection(possibleDirections);
+            } else {
+                Direction = FindShorterPathDirection(Coordinate, possibleDirections.ToArray(), scatterTarget);
+            }
         }
 
-        ApplyModifiers();
+        if (Chase) {
+            ApplyModifiers();
+        }
     }
 
     protected abstract Vector2Int ChooseDirection(List<Vector2Int> possibleDirections);
@@ -87,6 +110,25 @@ public abstract class Ghost : Character {
             }
         }
         return directions[shorterIndex];
+    }
+
+    public void MakeVulnerable(bool vulnerable) {
+        IsVulnerable = vulnerable;
+        if (vulnerable) {
+            // ++ make them turn away ++ //
+            Vector2Int lc = _lastCoord;
+            _lastCoord = _nextCoord;
+            _nextCoord = lc;
+            // start countdown
+            _vulnerableTimer = _vulnerableDelay;
+            // make scatter for longer time ?
+
+            // change animator to reflect vulnerable state
+        } else {
+            // reset scatter mode
+
+            // change animator to reflect normal state
+        }
     }
 
     public void SetOutOfSpawnerPath(List<Vector3> path) {

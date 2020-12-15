@@ -9,7 +9,7 @@ public class GhostObsessive : Ghost {
     }
 
     protected override Vector2Int ChooseDirection(List<Vector2Int> possibleDirections) {
-        return FindShorterPathDirection(Coordinate, possibleDirections.ToArray(), target.Coordinate);
+        return FindShorterPathDirection(Coordinate, possibleDirections.ToArray(), playerTarget.Coordinate);
     }
 
     protected override void ApplyModifiers() {

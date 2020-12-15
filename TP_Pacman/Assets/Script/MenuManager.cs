@@ -1,17 +1,18 @@
-﻿using System.IO;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
-using System;
+using UnityEngine.EventSystems;
 
 public class MenuManager : MonoBehaviour
 {
     public static MenuManager Instance = null;
 
-    public GameObject Background, Victory, Gameover;
-    public Text ScoreText, BallsText, TimeText;
+    public GameObject panelExplanations, panelEndGame, textsVictory, textsDefeat;
+    public Text ScoreText, HighscoreText, BallsText, TimeText;
+    public Button startButton;
 
     private void Awake() {
         if (Instance == null) {
@@ -23,49 +24,66 @@ public class MenuManager : MonoBehaviour
 
     private void Start() {
         // +++ recover the settings from PlayerPref +++ //
-        // recover language file
-        //LanguageManager.LoadLanguage(Language.English);
-        //UpdateMenuTexts();
         // recover the highscores from local storage (System.IO here we come !)
+        Debug.Log("Scene loaded!");
+        // select first button (only if on mainMenu)
+        if (SceneManager.GetActiveScene().buildIndex == 0) {
+            ChooseLanguage(Language.French);
+            SelectButton(startButton);
+        }
+    }
+
+    public void ChooseLanguage(Language lang) {
+        LanguageManager.LoadLanguage(lang); // recover language file
+        Debug.Log("The language is now" + LanguageManager.GetLanguage().ToString());
+        UpdateMenuTexts(); // update all the text elements to the current language
     }
 
     void UpdateMenuTexts() {
         // get all references to the mainMenu UI.Text elements and then write them using the LanguageManager class
+        TextLang[] texts = FindObjectsOfType<TextLang>();
+        LanguageManager.UpdateTexts(texts);
     }
 
-    public void Update_Overlay(float time, int score, int remainingBalls) {
-        ScoreText.text = LanguageManager.GetText(LangKeyWord.gameOverlay_score) + ": " + score;
-        TimeText.text = LanguageManager.GetText(LangKeyWord.gameOverlay_elapsedTime) + ": " + TimeSpan.FromSeconds(time).ToString("hh':'mm':'ss");
-        BallsText.text = LanguageManager.GetText(LangKeyWord.gameOverlay_remainingBalls) + ": " + remainingBalls;
+    public void UpdateOverlay(float time, int score, int remainingBalls) {
+        ScoreText.text = score.ToString();
+        TimeText.text = TimeSpan.FromSeconds(time).ToString("hh':'mm':'ss");
+        BallsText.text = remainingBalls.ToString();
         //Debug.Log("Time: " + TimeSpan.FromSeconds(time).ToString("hh':'mm':'ss"));
     }
 
-    public void ShowVictory()
-    {
-        Background.SetActive(true);
-        Victory.SetActive(true);
+    public void ShowVictory() {
+        panelEndGame.SetActive(true);
+        textsVictory.SetActive(true);
+        textsDefeat.SetActive(false);
     }
-    public void ShowGameover()
-    {
-        Background.SetActive(true);
-        Gameover.SetActive(true);
+    public void ShowGameover() {
+        panelEndGame.SetActive(true);
+        textsVictory.SetActive(false);
+        textsDefeat.SetActive(true);
     }
 
-    public void OnClick_Play() {
+    public void SelectButton(Button btn) {
+        EventSystem.current.SetSelectedGameObject(btn.gameObject);
+    }
+
+    public void LoadGameScene() {
         SceneManager.LoadScene(1);
     }
-    public void OnClick_LaunchGame() {
+    public void StartGame() {
+        panelExplanations.SetActive(false);
         GameManager.Instance.StartGame();
     }
-    public void OnClick_Retry()
+    public void RestartGame()
     {
+        panelEndGame.SetActive(false);
         GameManager.Instance.RestartGame();
     }
-    public void OnClick_Menu()
+    public void LoadMenuScene()
     {
         SceneManager.LoadScene(0);
     }
-    public void OnClick_Exit()
+    public void ExitApplication()
     {
         Application.Quit();
     }

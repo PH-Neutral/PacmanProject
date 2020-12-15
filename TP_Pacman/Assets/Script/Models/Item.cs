@@ -3,12 +3,10 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class Item : MonoBehaviour {
-    /*private void OnTriggerEnter2D(Collider2D collision) {
-        if (collision.tag == "Player") {
-            Player player = collision.GetComponent<Player>();
-            player.Score++;
-            //GameManager.Instance.RemainingBalls--;
-            //Destroy(gameObject);
-        }
-    }*/
+    public ItemType type = ItemType.Ball;
+    public int pointValue = 1;
+}
+
+public enum ItemType {
+    Ball, Bonus, PowerUp
 }

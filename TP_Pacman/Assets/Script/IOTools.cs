@@ -1,54 +1,60 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public static class IOTools {
 
-    public static string GetWorkingDirectory() {
+    public static string GetFullPath(string folderPath, string fileName = "") {
         string parentDirectoryName = Directory.GetParent(Directory.GetCurrentDirectory()).Parent.FullName;
         //Debug.Log("Parent Directory: " + parentDirectoryName);
-        return parentDirectoryName;
+        return parentDirectoryName + folderPath + '/' + fileName;
     }
 
     public static string[] LoadFile(string folderPath, string fileName) {
-        string projectFolder = GetWorkingDirectory();
-        string filePathFull = projectFolder + folderPath + '/' + fileName;
-        if (!File.Exists(filePathFull)) {
-            Debug.LogWarning("File was not found at specified path! " + filePathFull);
+        try {
+            string filePathFull = GetFullPath(folderPath, fileName);
+            if(!File.Exists(filePathFull)) {
+                Debug.LogWarning("File was not found at specified path! " + filePathFull);
+                return null;
+            }
+            return File.ReadAllLines(filePathFull);
+        } catch(Exception e) {
+            Debug.LogWarning("File could not be read.\n" + e);
             return null;
         }
-        string[] lines = File.ReadAllLines(filePathFull);
-        if (lines != null) {
-            //Debug.LogWarning("File successfully read!");
-        } else {
-            Debug.LogWarning("File could not be read!");
-        }
-        return lines;
     }
 
     public static bool WriteFile(string folderPath, string fileName, string[] linesToWrite) {
-        string projectFolder = GetWorkingDirectory();
-        string filePathFull = projectFolder + folderPath + '/' + fileName;
-        if(!File.Exists(filePathFull)) {
-            Debug.LogWarning("File was not found at specified path! " + filePathFull);
+        try {
+            string filePathFull = GetFullPath(folderPath, fileName);
+            if(!File.Exists(filePathFull)) {
+                if(!CreateFile(folderPath, fileName)) {
+                    return false;
+                }
+            }
+            File.WriteAllLines(filePathFull, linesToWrite);
+            //Debug.Log("File was created and written at specified path: " + filePathFull);
+            return true;
+        } catch (Exception e) {
+            Debug.LogWarning("File could not be written to.\n" + e);
             return false;
         }
-        File.AppendAllLines(filePathFull, linesToWrite);
-        return true;
     }
 
     public static bool CreateFile(string folderPath, string fileName) {
-        string projectFolder = GetWorkingDirectory();
-        string folderPathFull = projectFolder + folderPath;
-        if (!Directory.Exists(folderPathFull)) {
-            Directory.CreateDirectory(folderPathFull);
+        try {
+            string folderPathFull = GetFullPath(folderPath);
+            if(!Directory.Exists(folderPathFull)) {
+                Directory.CreateDirectory(folderPathFull);
+            }
+            string filePathFull = GetFullPath(folderPath, fileName);
+            File.Create(filePathFull);
+            return true;
+        } catch (Exception e) {
+            Debug.LogWarning("File could not be created.\n" + e);
+            return false;
         }
-        string filePath = folderPathFull + '/' + fileName;
-        File.Create(filePath);
-        //Debug.Log("File created with success at: " + filePath);
-        return true;
-
-        //using(StreamWriter w = File.AppendText("log.txt"))
     }
 }

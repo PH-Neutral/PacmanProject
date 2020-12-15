@@ -8,39 +8,69 @@ public class LanguageManager {
 
     static LanguageManager Lang = null;
 
+    public static void UpdateTexts(TextLang[] textElements) {
+        for(int i = 0; i < textElements.Length; i++) {
+            textElements[i].Text = Lang.GetValue(textElements[i].keyWord);
+        }
+    }
+
     public static bool LoadLanguage(Language language) {
         if ((int)language < 0 || (int)language >= langFiles.Length) { return false; }
         Lang = new LanguageManager(language);
         return true;
     }
 
+    public static Language GetLanguage() {
+        return Lang.currentLanguage;
+    }
+
     public static string GetText(LangKeyWord keyWord) {
-        string key = keyWord.ToString();
-        if(!Lang._texts.ContainsKey(key)) { return ""; }
-        return Lang._texts[key];
+        return Lang.GetValue(keyWord);
+    }
+
+    static void InitializeDefaultValues() {
+        languageValues = new string[][] { null, englishValues };
     }
 
     // - - - - - Instance - - - - - //
 
-    Dictionary<string, string> _texts;
+    public Language currentLanguage;
+    public Dictionary<string, string> textAssociations;
 
     public LanguageManager(Language language) {
-        _texts = new Dictionary<string, string>();
+        InitializeDefaultValues();
+        currentLanguage = language;
+        textAssociations = new Dictionary<string, string>();
         if (!LoadLanguageFile(language)) {
+            LoadLanguageFileDefault();
             WriteLanguageFile(language);
-            LoadLanguageFile(language);
+            currentLanguage = defaultLanguage;
         }
+    }
+
+    bool LoadLanguageFileDefault() {
+        for(int i=0; i< keyWords.Length; i++) {
+            string txtValue = missingValue;
+            //Debug.Log("DefLang: " + (int)defaultLanguage + "; langValue: " + languageValues[(int)defaultLanguage]);
+            if (i < languageValues[(int)defaultLanguage].Length) {
+                txtValue = languageValues[(int)defaultLanguage][i];
+            }
+            textAssociations[keyWords[i].ToString()] = txtValue;
+            //Debug.Log("line: " + lines[i] + "; key: " + decodedLine[0] + "; value: " + decodedLine[1]);
+        }
+        return true;
     }
 
     bool LoadLanguageFile(Language language) {
         //if((int)language < 0 || (int)language >= langFiles.Length) { return; }
         string fileName = langFiles[(int)language] + fileExtension;
         string[] lines = IOTools.LoadFile(folderPath, fileName);
-        if (lines == null) { return false; }
-        for(int i=0; i<lines.Length; i++) {
+        if(lines == null) { return false; }
+        if (lines.Length < keyWords.Length) { return false; }
+        for(int i = 0; i < lines.Length; i++) {
             //Debug.Log(line);
             string[] decodedLine = DecodeLine(lines[i]);
-            _texts[decodedLine[0]] = decodedLine[1];
+            textAssociations[decodedLine[0]] = decodedLine[1];
             //Debug.Log("line: " + lines[i] + "; key: " + decodedLine[0] + "; value: " + decodedLine[1]);
         }
         return true;
@@ -54,9 +84,9 @@ public class LanguageManager {
             values = languageValues[(int)defaultLanguage];
         }
         for (int i=0; i<keyWords.Length; i++) {
-            string value = i < values.Length ? values[i] : defaultValue;
+            string value = i < values.Length ? values[i] : missingValue;
             if (value == "") {
-                value = defaultValue;
+                value = missingValue;
             }
             lines[i] = EncodeLine(keyWords[i].ToString(), value);
         }
@@ -81,6 +111,7 @@ public class LanguageManager {
             if (workingString[i] == '\"') {
                 if (!quoteOpen) {
                     startIndex = i + 1;
+                    endIndex = startIndex;
                     quoteOpen = true;
                 } else {
                     endIndex = i;
@@ -95,18 +126,29 @@ public class LanguageManager {
         return key + '=' + '\"' + value + '\"';
     }
 
+    public string GetValue(LangKeyWord keyWord) => GetValue(keyWord.ToString());
+    public string GetValue(string keyWord) {
+        if (!textAssociations.ContainsKey(keyWord)) {
+            return missingValue;
+        }
+        return textAssociations[keyWord];
+    }
+
     // - - - - - DEFAULT VALUES - - - - - //
 
     static Language defaultLanguage = Language.English;
     static LangKeyWord[] keyWords = new LangKeyWord[] {
-        LangKeyWord.mainMenu_title, LangKeyWord.mainMenu_subtitle, LangKeyWord.mainMenu_button_start, LangKeyWord.mainMenu_button_settings, 
-        LangKeyWord.mainMenu_button_credits, LangKeyWord.mainMenu_button_exitApp, LangKeyWord.gameOverlay_score, LangKeyWord.gameOverlay_elapsedTime, 
-        LangKeyWord.gameOverlay_remainingBalls
+        LangKeyWord.mainMenu_title, LangKeyWord.mainMenu_subtitle, LangKeyWord.button_start, LangKeyWord.button_settings, LangKeyWord.button_credits, 
+        LangKeyWord.button_exitApp, LangKeyWord.button_retry, LangKeyWord.button_menu,
+        LangKeyWord.gameOverlay_score, LangKeyWord.gameOverlay_highscore, LangKeyWord.gameOverlay_elapsedTime, LangKeyWord.gameOverlay_remainingBalls, LangKeyWord.gameOverlay_victoryTitle, 
+        LangKeyWord.gameOverlay_victoryDescription, LangKeyWord.gameOverlay_defeatTitle, LangKeyWord.gameOverlay_defeatDescription
     };
-    static string defaultValue = "[Missing]";
-    static string[][] languageValues = new string[][] { null, englishValues };
+    static string missingValue = "[Missing]";
+    static string[][] languageValues;
     static string[] englishValues = new string[] {
-        "Pacman", "Unity practical work", "Start", "Settings", "Credits", "Exit", "Score", "Time", "Remaing Balls"
+        "Pacman", "Unity practical work", "Start", "Settings", "Credits", "Exit", "Retry", "Menu", "SCORE:", "HIGHSCORE:", "TIME:", "REMAINING BALLS:", 
+        "VICTORY!", "You managed to get all the pac-gums while avoiding those pesky ghosts. Congratulation.", 
+        "DEFEAT...", "It seems the ghosts got to you and killed you. Better luck next time."
     };
 }
 
@@ -115,6 +157,7 @@ public enum Language {
 }
 
 public enum LangKeyWord {
-    mainMenu_title, mainMenu_subtitle, mainMenu_button_start, mainMenu_button_settings, mainMenu_button_credits, mainMenu_button_exitApp, 
-    gameOverlay_score, gameOverlay_elapsedTime, gameOverlay_remainingBalls
+    mainMenu_title, mainMenu_subtitle, button_start, button_settings, button_credits, button_exitApp, button_retry, button_menu,
+    gameOverlay_score, gameOverlay_highscore, gameOverlay_elapsedTime, gameOverlay_remainingBalls, gameOverlay_victoryTitle, gameOverlay_defeatTitle, gameOverlay_victoryDescription,
+    gameOverlay_defeatDescription
 }
