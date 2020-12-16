@@ -6,6 +6,7 @@ using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour {
     public static GameManager Instance = null;
+    public static readonly string keyHighscore = "highscore";
 
     public bool GamePaused {
         get; set;
@@ -32,11 +33,13 @@ public class GameManager : MonoBehaviour {
     [SerializeField] Vector2Int[] ghostSpawnBounds = new Vector2Int[2];
     [SerializeField] Vector2Int ghostLeaveSpawnerVector = Vector2Int.up * 2;
     [SerializeField] float ghostsFreeAtPercentBallsEaten = 0.3f;
-    [SerializeField] Item prefabBall = null;
+    [SerializeField] Item prefabPacGum = null;
+    [SerializeField] Item prefabFruit = null;
+    [SerializeField] Item prefabSuperPacGum = null;
+    [SerializeField] Vector2Int[] superPacGumPositions = null;
     Tilemap tilemapIgnoreItem = null, tilemapPath = null, tilemapWalls = null;
     Dictionary<Vector2Int, Node> gridNodes = null;
     Dictionary<Vector2Int, Item> gridItems = null;
-    readonly string keyHighscore = "highscore";
     int highscore = 0;
 
     private float _chrono;
@@ -81,9 +84,9 @@ public class GameManager : MonoBehaviour {
         if((item = GetItem(Player.Coordinate)) != null) {
             Player.Score += item.pointValue;
             // check the kind of item it is
-            if(item.type != ItemType.Bonus) {
+            if(item.type != ItemType.Fruit) {
                 RemainingBalls--;
-                if (item.type == ItemType.PowerUp) {
+                if (item.type == ItemType.SuperPacGum) {
                     MakeGhostsVulnerable();
                 }
             }
@@ -98,10 +101,18 @@ public class GameManager : MonoBehaviour {
         for(int i = 0; i < Ghosts.Count; i++) {
             if(Player.Coordinate == Ghosts[i].Coordinate) {
                 if(Ghosts[i].IsVulnerable) {
+                    int nbVulnerableGhosts = Ghosts.Count;
+                    for (int j=0; j<Ghosts.Count; j++) {
+                        if (Ghosts[j].IsVulnerable) {
+                            nbVulnerableGhosts--;
+                        }
+                    }
+                    Player.Score += 100 * (int)Mathf.Pow(2, nbVulnerableGhosts);
                     Ghosts[i].MakeDead();
                 } else {
                     Player.MakeDead();
                     LoseGame();
+                    break;
                 }
             }
         }
@@ -119,8 +130,9 @@ public class GameManager : MonoBehaviour {
         float currentPercent = 1 - RemainingBalls / (float)MaxBalls;
         for(int i = 0; i < Ghosts.Count; i++) {
             float percentToActivate = Mathf.Lerp(0, ghostsFreeAtPercentBallsEaten, i / (float)(Ghosts.Count - 1));
-            if(currentPercent >= percentToActivate) {
+            if(currentPercent >= percentToActivate && Ghosts[i].firstActivation) {
                 Ghosts[i].IsWaiting = false;
+                Ghosts[i].firstActivation = false;
             }
             //Debug.Log("percentToActivate = " + percentToActivate + "; currentPercent = " + currentPercent);
         }
@@ -129,7 +141,9 @@ public class GameManager : MonoBehaviour {
 
     void MakeGhostsVulnerable() {
         for (int i=0; i<Ghosts.Count; i++) {
-            Ghosts[i].MakeVulnerable(true);
+            if (!Ghosts[i].IsWaiting) {
+                Ghosts[i].MakeVulnerable(true);
+            }
         }
     }
 
@@ -139,15 +153,19 @@ public class GameManager : MonoBehaviour {
     }
 
     void WinGame() {
+        OnGameEnds();
         MenuManager.Instance.ShowVictory();
-        GamePaused = true;
-        SaveHighscore();
     }
 
     void LoseGame() {
+        OnGameEnds();
         MenuManager.Instance.ShowGameover();
-        GamePaused = true;
+    }
+
+    void OnGameEnds() {
         SaveHighscore();
+        //Player.Score *= 1 + (1 / (_chrono == 0 ? ))
+        GamePaused = true;
     }
 
     public void StartGame() {
@@ -155,7 +173,7 @@ public class GameManager : MonoBehaviour {
 
         InitializeGraph();
         AdaptCamera();
-        SpawnBalls();
+        SpawnItems();
         SpawnGhosts();
         SpawnPacman();
 
@@ -354,12 +372,17 @@ public class GameManager : MonoBehaviour {
         }*/
     }
 
-    void SpawnBalls() {
+    void SpawnItems() {
         gridItems = new Dictionary<Vector2Int, Item>();
-        GameObject pool = CreatePool(prefabBall.name + " Pool");
+        GameObject pool = CreatePool("Item Pool");
+        if (superPacGumPositions != null) {
+            for(int i = 0; i < superPacGumPositions.Length; i++) {
+                SpawnItem(prefabSuperPacGum, superPacGumPositions[i], pool.transform);
+            }
+        }
         foreach(Vector2Int coord in gridNodes.Keys) {
             if(!gridItems.ContainsKey(coord) && !tilemapIgnoreItem.HasTile((Vector3Int)coord)) {
-                SpawnItem(prefabBall, coord, pool.transform);
+                SpawnItem(prefabPacGum, coord, pool.transform);
             }
         }
         RemainingBalls = MaxBalls = gridItems.Count;

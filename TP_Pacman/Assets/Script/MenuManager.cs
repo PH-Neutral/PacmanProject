@@ -10,9 +10,11 @@ public class MenuManager : MonoBehaviour
 {
     public static MenuManager Instance = null;
 
+    public Canvas canvas;
     public GameObject panelExplanations, panelEndGame, textsVictory, textsDefeat;
     public Text ScoreText, HighscoreText, BallsText, TimeText;
     public Button startButton;
+    public Toggle englishToggle, frenchToggle;
 
     private void Awake() {
         if (Instance == null) {
@@ -23,25 +25,31 @@ public class MenuManager : MonoBehaviour
     }
 
     private void Start() {
-        // +++ recover the settings from PlayerPref +++ //
-        // recover the highscores from local storage (System.IO here we come !)
-        //Debug.Log("Scene loaded!");
-        // select first button (only if on mainMenu)
+        SelectButton(startButton);
         if (SceneManager.GetActiveScene().buildIndex == 0) {
-            ChooseLanguage(Language.English);
-            SelectButton(startButton);
+            ActivateLanguageToggle();
+            ChooseLanguage();
+        } else {
+            UpdateMenuTexts();
         }
     }
 
-    public void ChooseLanguage(Language lang) {
-        LanguageManager.LoadLanguage(lang); // recover language file
-        Debug.Log("The language is now" + LanguageManager.GetLanguage().ToString());
+    public void ChooseLanguage() {
+        Language chosenLang = LanguageManager.Instance.defaultLanguage;
+        if (englishToggle.isOn) {
+            chosenLang = Language.English;
+        } else if (frenchToggle.isOn) {
+            chosenLang = Language.French;
+        }
+        LanguageManager.LoadLanguage(chosenLang);
+        //Debug.Log("The language is now " + LanguageManager.GetLanguage().ToString());
         UpdateMenuTexts(); // update all the text elements to the current language
     }
 
-    void UpdateMenuTexts() {
+    public void UpdateMenuTexts() {
         // get all references to the mainMenu UI.Text elements and then write them using the LanguageManager class
-        TextLang[] texts = FindObjectsOfType<TextLang>();
+        //TextLang[] texts = FindObjectsOfType<TextLang>();
+        TextLang[] texts = canvas.GetComponentsInChildren<TextLang>(true);
         LanguageManager.UpdateTexts(texts);
     }
 
@@ -64,7 +72,21 @@ public class MenuManager : MonoBehaviour
         textsDefeat.SetActive(true);
     }
 
+    public void ResetHighscore() {
+        PlayerPrefs.SetInt(GameManager.keyHighscore, 0);
+    }
+
+    public void ActivateLanguageToggle() {
+        Language currentLang = LanguageManager.GetLanguage();
+        if (currentLang == Language.French) {
+            frenchToggle.isOn = true;
+        } else if(currentLang == Language.English) {
+            englishToggle.isOn = true;
+        }
+    }
+
     public void SelectButton(Button btn) {
+        if (btn == null) { return; }
         EventSystem.current.SetSelectedGameObject(btn.gameObject);
     }
 

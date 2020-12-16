@@ -7,7 +7,7 @@ public class TextLang : MonoBehaviour {
     public LangKeyWord keyWord;
     public string Text {
         set {
-            textElement.text = value;
+            GetComponent<Text>().text = value;
         }
     }
 

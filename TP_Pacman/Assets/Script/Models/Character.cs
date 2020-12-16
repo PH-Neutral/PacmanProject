@@ -65,6 +65,7 @@ public abstract class Character : MonoBehaviour {
                 transform.position -= startPos - newStartPos;
                 _currentCoord = newStartCoord;
                 _nextCoord = nt2.Coordinate;
+                _lastCoord = _currentCoord;
             }
         }
     }
@@ -109,12 +110,12 @@ public abstract class Character : MonoBehaviour {
         //_endPosition = GameManager.Instance.CellToWorld(Coordinate);
     }
 
-    public void MakeDead() {
+    public virtual void MakeDead() {
         animator.speed = 1f;
         animator.SetBool("Dead", true);
     }
 
-    public void MakeAlive() {
+    public virtual void MakeAlive() {
         animator.speed = Speed;
         animator.SetBool("Dead", false);
     }

@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class Item : MonoBehaviour {
-    public ItemType type = ItemType.Ball;
+    public ItemType type = ItemType.PacGum;
     public int pointValue = 1;
 }
 
 public enum ItemType {
-    Ball, Bonus, PowerUp
+    PacGum, Fruit, SuperPacGum
 }

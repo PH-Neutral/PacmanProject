@@ -1152,6 +1152,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7d1f971114d659f41b7ae6d6a9ed94d1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  canvas: {fileID: 333570610}
   panelExplanations: {fileID: 451104973}
   panelEndGame: {fileID: 273066210}
   textsVictory: {fileID: 1082801266}
@@ -1161,6 +1162,8 @@ MonoBehaviour:
   BallsText: {fileID: 135841532}
   TimeText: {fileID: 1241775568}
   startButton: {fileID: 0}
+  englishToggle: {fileID: 0}
+  frenchToggle: {fileID: 0}
 --- !u!4 &611793860
 Transform:
   m_ObjectHideFlags: 0
@@ -2588,8 +2591,16 @@ MonoBehaviour:
   - {x: 1, y: 5}
   ghostLeaveSpawnerVector: {x: 0, y: 3}
   ghostsFreeAtPercentBallsEaten: 0.3
-  prefabBall: {fileID: 8004363339207729548, guid: 5c213676f8d648a42a9d2eaff348a60b,
+  prefabPacGum: {fileID: 8004363339207729548, guid: 5c213676f8d648a42a9d2eaff348a60b,
     type: 3}
+  prefabFruit: {fileID: 0}
+  prefabSuperPacGum: {fileID: 3394364496780583579, guid: 1b3399a0409b9124fa8f5f3a021ff4b5,
+    type: 3}
+  superPacGumPositions:
+  - {x: -14, y: 16}
+  - {x: 13, y: 16}
+  - {x: -14, y: -7}
+  - {x: 13, y: -7}
 --- !u!4 &1101896362
 Transform:
   m_ObjectHideFlags: 0
