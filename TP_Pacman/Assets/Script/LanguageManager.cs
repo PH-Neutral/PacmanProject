@@ -195,7 +195,8 @@ public class LanguageManager : MonoBehaviour {
         LangKeyWord.gameOverlay_victoryDescription, LangKeyWord.gameOverlay_defeatTitle, LangKeyWord.gameOverlay_defeatDescription,
         LangKeyWord.inProgress,
         LangKeyWord.creditMenu_title, LangKeyWord.creditMenu_developpedBy,
-        LangKeyWord.settingsMenu_title, LangKeyWord.settingsMenu_language, LangKeyWord.button_resetHighscore
+        LangKeyWord.settingsMenu_title, LangKeyWord.settingsMenu_language, LangKeyWord.button_resetHighscore, 
+        LangKeyWord.panel_goal, LangKeyWord.panel_ghosts, LangKeyWord.panel_pu, LangKeyWord.panel_movement, LangKeyWord.panel_advice
     };
     static string missingValue = "[Missing]";
     static string[][] languageValues;
@@ -206,7 +207,9 @@ public class LanguageManager : MonoBehaviour {
         "DEFEAT...", "It seems the ghosts got to you and killed you. Better luck next time.",
         "In progress...",
         "Credits", "Developped by:",
-        "Settings", "Language:", "Reset Highscore"
+        "Settings", "Language:", "Reset Highscore", 
+        "Eat every pacgums while avoiding being touch by ghosts", "Ghosts follow you and try to stop you ! There is Obsessive, Aggressive, Witty and Lazy.",
+        "Eat Super pacgums to make ghosts vulnerable !", "To move use directional arrows or ZQSD.", "Click somwhere on the screen to continue"
     };
     static string[] frenchValues = new string[] {
         "Français",
@@ -215,7 +218,9 @@ public class LanguageManager : MonoBehaviour {
         "DEFAITE...", "Vous êtes mort, attrapé par les fantômes. Vous gagnerez peut-être la prochaine fois.",
         "En cours...",
         "Crédits", "Développé par:",
-        "Options", "Langue:", "Réinitialiser Highscore"
+        "Options", "Langue:", "Réinitialiser Highscore",
+        "Mangez toutes les pacgums en évitant de se faire toucher par les fantômes", "Les fantômes vous poursuivent et tentent de vous arrêter ! Il y a Obsessive, Aggressive, Witty et Lazy",
+        "Mangez les Super pacgums pour rendre les fantômes vulnérables !", "Pour se déplacer, utilisez soit les flèches directionnelles du clavier soit ZQSD.", "Cliquez n'importe ou sur l'écran pour continuer..."
     };
 }
 
@@ -226,5 +231,6 @@ public enum Language {
 public enum LangKeyWord {
     mainMenu_title, mainMenu_subtitle, button_start, button_settings, button_credits, button_exitApp, button_retry, button_menu,
     gameOverlay_score, gameOverlay_highscore, gameOverlay_elapsedTime, gameOverlay_remainingBalls, gameOverlay_victoryTitle, gameOverlay_defeatTitle, gameOverlay_victoryDescription,
-    gameOverlay_defeatDescription, language, inProgress, creditMenu_developpedBy, creditMenu_title, settingsMenu_title, settingsMenu_language, button_resetHighscore
+    gameOverlay_defeatDescription, language, inProgress, creditMenu_developpedBy, creditMenu_title, settingsMenu_title, settingsMenu_language, button_resetHighscore, panelGoalText, 
+    panel_goal, panel_ghosts, panel_pu, panel_movement, panel_advice
 }
