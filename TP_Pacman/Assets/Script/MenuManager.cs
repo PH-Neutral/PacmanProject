@@ -42,15 +42,14 @@ public class MenuManager : MonoBehaviour
             chosenLang = Language.French;
         }
         LanguageManager.LoadLanguage(chosenLang);
-        //Debug.Log("The language is now " + LanguageManager.GetLanguage().ToString());
-        UpdateMenuTexts(); // update all the text elements to the current language
+        UpdateMenuTexts();
     }
 
+    /// <summary>
+    /// Update all the text elements with component "TextLang" with their associated text in the selected language
+    /// </summary>
     public void UpdateMenuTexts() {
-        // get all references to the mainMenu UI.Text elements and then write them using the LanguageManager class
-        //TextLang[] texts = FindObjectsOfType<TextLang>();
-        TextLang[] texts = canvas.GetComponentsInChildren<TextLang>(true);
-        LanguageManager.UpdateTexts(texts);
+        LanguageManager.UpdateTexts(canvas);
     }
 
     public void UpdateOverlay(float time, int score, int highscore, int remainingBalls) {
@@ -74,6 +73,7 @@ public class MenuManager : MonoBehaviour
 
     public void ResetHighscore() {
         PlayerPrefs.SetInt(GameManager.keyHighscore, 0);
+        PlayerPrefs.Save();
     }
 
     public void ActivateLanguageToggle() {

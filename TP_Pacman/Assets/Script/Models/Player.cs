@@ -11,7 +11,6 @@ public class Player : Character {
 
     protected override void DoEachUpdate() {
         //GameManager gm = GameManager.Instance;
-        //Debug.Log(name + " is on " + Coordinate.ToString() + " and the node is " + (Maze.Instance.GetNode(Coordinate) == null ? "" : "NOT ") + "null");
         Vector2Int inputs = GetMoveInputs(); // get the player inputs related to movement
         Node nextNode = gm.GetNode(_nextCoord);
         if (nextNode == null && gm.GetNode(_currentCoord).Type == NodeType.Tunnel) {
@@ -34,10 +33,10 @@ public class Player : Character {
         }
 
         if (nextNode.HasNeighbor(_nextDir)) {
+            // if cell in the prepared direction is not a wall, change direction
             Direction = _nextDir;
             _nextDir = Vector2Int.zero;
         }
-        //Debug.Log("Direction prepared! New: " + Direction.ToString() + " based on inputs: " + inputs.ToString());
     }
 
     protected override void DoWhenCellReached() {

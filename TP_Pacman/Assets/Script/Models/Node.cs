@@ -18,20 +18,28 @@ public class Node {
         Parent = null;
     }
 
-    public bool HasNeighbor(Vector2Int relativeCoordinate) {
-        return GetNeighbor(relativeCoordinate) != null;
+    public bool HasNeighbor(Vector2Int direction) {
+        return GetNeighbor(direction) != null;
     }
 
-    public virtual Node GetNeighbor(Vector2Int relativeCoordinate) {
-        if (relativeCoordinate == Vector2Int.zero) { return null; }
+    /// <summary>
+    /// Get the neighbor associated with this direction.
+    /// </summary>
+    /// <param name="direction">The direction from which to get the node.</param>
+    /// <returns>The node associated with this direction. Null if there is no associated node in this direction.</returns>
+    public virtual Node GetNeighbor(Vector2Int direction) {
+        if (direction == Vector2Int.zero) { return null; }
         for(int i=0; i<Neighbors.Count; i++) {
-            if (Neighbors[i].Coordinate == this.Coordinate + relativeCoordinate) {
+            if (Neighbors[i].Coordinate == this.Coordinate + direction) {
                 return Neighbors[i];
             }
         }
         return null;
     }
 
+    /// <summary>
+    /// Reset Depth and Parent.
+    /// </summary>
     public void Clean() {
         Depth = -1;
         Parent = null;

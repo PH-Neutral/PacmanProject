@@ -5,7 +5,9 @@ using UnityEngine;
 public class LanguageManager : MonoBehaviour {
     public static LanguageManager Instance = null;
 
-    public static void UpdateTexts(TextLang[] textElements) {
+    public static void UpdateTexts(Canvas canvas) {
+        // get all references to the canvas' UI.Text elements and then write to them using the saved associations
+        TextLang[] textElements = canvas.GetComponentsInChildren<TextLang>(true);
         for(int i = 0; i < textElements.Length; i++) {
             textElements[i].Text = Instance.GetValue(textElements[i].keyWord);
         }

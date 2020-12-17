@@ -10,12 +10,4 @@ public class TextLang : MonoBehaviour {
             GetComponent<Text>().text = value;
         }
     }
-
-    Text textElement = null;
-    private void Awake() {
-        textElement = GetComponent<Text>();
-        if (textElement == null) {
-            Debug.LogError(name + " doesn't have a UI.Text component!");
-        }
-    }
 }

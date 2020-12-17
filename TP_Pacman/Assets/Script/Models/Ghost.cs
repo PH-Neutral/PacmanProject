@@ -80,7 +80,7 @@ public abstract class Ghost : Character {
 
     protected override void DoWhenCellReached() {
         Node currentNode = gm.GetNode(Coordinate);
-        //Debug.Log("currentNode = " + currentNode + "; Coordinate = " + Coordinate);
+        // ++ get the possible directions in which to move (where there isn't a wall and where the ghost isn't coming from) ++ //
         List<Vector2Int> possibleDirections = new List<Vector2Int>();
         for(int i = 0; i < PacTools.v2IntDirections.Length; i++) {
             Vector2Int dir = PacTools.v2IntDirections[i];
@@ -92,10 +92,13 @@ public abstract class Ghost : Character {
             Direction = possibleDirections[0];
         } else {
             if (IsVulnerable) {
+                // run from the player if in vulnerable state
                 Direction = FindLongerPathDirection(Coordinate, possibleDirections.ToArray(), playerTarget.Coordinate);
             } else if (Chase) {
+                // chase the player using specific behavior
                 Direction = ChooseDirection(possibleDirections);
             } else {
+                // scatter towards the ghost's prefered position
                 Direction = FindShorterPathDirection(Coordinate, possibleDirections.ToArray(), scatterTarget);
             }
         }
@@ -146,13 +149,9 @@ public abstract class Ghost : Character {
             _nextCoord = lc;
             // start countdown
             _vulnerableTimer = _vulnerableDelay;
-            // change animator to reflect vulnerable state
-            //Debug.Log(this + "\'s animator should be back to normal.");
         } else {
             // reset mode to "chase"
             SwitchChaseMode(true);
-            // change animator to reflect normal state
-            //Debug.Log(this + "\'s animator should be back to normal.");
         }
         UpdateAnimator();
     }

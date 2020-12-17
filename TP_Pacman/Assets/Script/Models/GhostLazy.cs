@@ -10,6 +10,7 @@ public class GhostLazy : Ghost {
 
     protected override Vector2Int ChooseDirection(List<Vector2Int> possibleDirections) {
         List<Vector2Int> directions = new List<Vector2Int>(possibleDirections);
+        // check if the player is visible in each direction and if so, don't choose this direction
         for(int i = 0; i < possibleDirections.Count; i++) {
             Vector2Int dir = possibleDirections[i];
             Vector2Int playerCoord = gm.Player.Coordinate;
@@ -24,6 +25,7 @@ public class GhostLazy : Ghost {
                 break;
             }
         }
+        // choose at random between the remaining possible directions
         return directions[Random.Range(0, directions.Count)];
     }
 

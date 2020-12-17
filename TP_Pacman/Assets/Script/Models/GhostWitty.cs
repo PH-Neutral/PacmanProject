@@ -14,6 +14,7 @@ public class GhostWitty : Ghost {
         int length = 0;
         Node searchNode = gm.GetNode(gm.Player.Coordinate);
         Vector2Int targetCoord;
+        // search up to 4 cells in player's direction (if not zero) and then to the next crossraod or just before the next wall
         do {
             targetCoord = searchNode.Coordinate;
             if (length++ >= _predictivePathLength && (searchNode.Type == NodeType.Corner || searchNode.Type == NodeType.Crossroad)) {

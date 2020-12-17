@@ -41,8 +41,7 @@ public class GameManager : MonoBehaviour {
     Dictionary<Vector2Int, Node> gridNodes = null;
     Dictionary<Vector2Int, Item> gridItems = null;
     int highscore = 0;
-
-    private float _chrono;
+    float _chrono;
 
 
     private void Awake() {
@@ -55,17 +54,12 @@ public class GameManager : MonoBehaviour {
         tilemapIgnoreItem = GameObject.Find("Tilemap_emptyAreas").GetComponent<Tilemap>();
         tilemapPath = GameObject.Find("Tilemap_paths").GetComponent<Tilemap>();
         tilemapWalls = GameObject.Find("Tilemap_walls").GetComponent<Tilemap>();
-
-        //InitializeGraph();
-        //SpawnItems(prefabBonus);
-        //SpawnBalls();
-
-        //AdaptCamera();
-
         GamePaused = true;
     }
 
     private void Start() {
+        LoadHighscore();
+        MenuManager.Instance.UpdateOverlay(0, 0, highscore, 0);
     }
 
     private void Update() {
@@ -90,6 +84,7 @@ public class GameManager : MonoBehaviour {
                     MakeGhostsVulnerable();
                 }
             }
+            // remove gameobject and reference in the dictionary
             gridItems.Remove(Player.Coordinate);
             Destroy(item.gameObject);
 
@@ -100,16 +95,22 @@ public class GameManager : MonoBehaviour {
         // ++ Check collision between player and ghosts ++ //
         for(int i = 0; i < Ghosts.Count; i++) {
             if(Player.Coordinate == Ghosts[i].Coordinate) {
+                // if player is at same coordinate than ghost
                 if(Ghosts[i].IsVulnerable) {
-                    int nbVulnerableGhosts = Ghosts.Count;
+                    // if ghost can be eaten
+                    /*/ calculate number of remaining ghosts and adapt score to give player
+                    int nbNotVulnerableGhosts = Ghosts.Count;
                     for (int j=0; j<Ghosts.Count; j++) {
                         if (Ghosts[j].IsVulnerable) {
-                            nbVulnerableGhosts--;
+                            nbNotVulnerableGhosts--;
                         }
                     }
-                    Player.Score += 100 * (int)Mathf.Pow(2, nbVulnerableGhosts);
+                    Player.Score += 100 * (int)Mathf.Pow(2, nbNotVulnerableGhosts); // 1st ghost is 100, 2nd is 200, 3rd is 400 and 4th 800
+                    // doesn't work well if some ghosts haven't spawned yet when eating one */
+                    Player.Score += 250;
                     Ghosts[i].MakeDead();
                 } else {
+                    // if ghost is not vulnerable
                     Player.MakeDead();
                     LoseGame();
                     break;
@@ -126,15 +127,14 @@ public class GameManager : MonoBehaviour {
     }
 
     void CheckForGhostActivation() {
-        //float maxPercent = MaxBalls * ghostsFreeAtPercentBallsEaten;
         float currentPercent = 1 - RemainingBalls / (float)MaxBalls;
         for(int i = 0; i < Ghosts.Count; i++) {
+            // check the percentage of balls eaten and lerp on it to make ghosts spawn based on it
             float percentToActivate = Mathf.Lerp(0, ghostsFreeAtPercentBallsEaten, i / (float)(Ghosts.Count - 1));
             if(currentPercent >= percentToActivate && Ghosts[i].firstActivation) {
                 Ghosts[i].IsWaiting = false;
                 Ghosts[i].firstActivation = false;
             }
-            //Debug.Log("percentToActivate = " + percentToActivate + "; currentPercent = " + currentPercent);
         }
 
     }
@@ -142,6 +142,7 @@ public class GameManager : MonoBehaviour {
     void MakeGhostsVulnerable() {
         for (int i=0; i<Ghosts.Count; i++) {
             if (!Ghosts[i].IsWaiting) {
+                // if ghost is at least leaving the spawn, make it vulnerable
                 Ghosts[i].MakeVulnerable(true);
             }
         }
@@ -153,6 +154,12 @@ public class GameManager : MonoBehaviour {
     }
 
     void WinGame() {
+        // calculate the score multiplier based on the time it took to win the game
+        float scoreMultiplier = 3f / Mathf.Pow(_chrono - 11, 0.5f) + 1; // 12sec = x4, then descending and nearing 1
+        if(_chrono < 12) {
+            scoreMultiplier = 4;
+        }
+        Player.Score = (int)(Player.Score * scoreMultiplier);
         OnGameEnds();
         MenuManager.Instance.ShowVictory();
     }
@@ -163,8 +170,8 @@ public class GameManager : MonoBehaviour {
     }
 
     void OnGameEnds() {
+        UpdateOverlay();
         SaveHighscore();
-        //Player.Score *= 1 + (1 / (_chrono == 0 ? ))
         GamePaused = true;
     }
 
@@ -183,13 +190,16 @@ public class GameManager : MonoBehaviour {
 
     public void RestartGame()
     {
+        // destroy all items still in the maze
         foreach (Item item in gridItems.Values)
         {
             Destroy(item.gameObject);
         }
+        // destroy all ghosts
         for (int i=0; i<Ghosts.Count; i++) {
             Destroy(Ghosts[i].gameObject);
         }
+        // destroy the player
         Destroy(Player.gameObject);
 
         StartGame();
@@ -223,12 +233,10 @@ public class GameManager : MonoBehaviour {
 
     public Vector3 CellToWorld(Vector2Int gridPosition) {
         return tilemapPath.GetCellCenterWorld((Vector3Int)gridPosition);
-        //return new Vector3((gridPosition.x + 0.5f) * MapScale.x, (gridPosition.y + 0.5f) * MapScale.y) + transform.position;
     }
 
     public Vector2Int WorldToCell(Vector3 worldPosition) {
         return (Vector2Int)Grid.WorldToCell(worldPosition);
-        //return new Vector2Int(Mathf.FloorToInt(worldPosition.x / MapScale.x - MapScale.x * 0.5f), Mathf.FloorToInt(worldPosition.y / MapScale.y - MapScale.y * 0.5f));
     }
 
     public Vector3 VectorCellToWorld(Vector2Int vectorGrid) => VectorCellToWorld((Vector3Int)vectorGrid);
@@ -240,17 +248,18 @@ public class GameManager : MonoBehaviour {
         return distanceGrid * Grid.cellSize.x;
     }
 
+    /// <summary>
+    /// Get the path of nodes from one coordinate to another.
+    /// </summary>
+    /// <param name="from">The starting coordinate.</param>
+    /// <param name="to">The ending coordinate.</param>
+    /// <returns>A list of all nodes that compose the path, in order from the next one to the end one. 
+    /// Null if the end Node can't be reached or if one of the coordinate doesn't point to an existing node.</returns>
     public List<Node> GetPath(Vector2Int from, Vector2Int to) {
-        //Debug.Log("from: " + from.ToString() + " to: " + to.ToString());
         Node startNode = GetNode(from);
-        //Debug.Log("startNode: " + startNode.ToString());
         Node endNode = GetNode(to);
-        //Debug.Log("endNode: " + endNode.ToString());
-        if(startNode == null) {
-            Debug.Log("startNode is NULL for coord: " + from.ToString());
-        }
-        if(endNode == null) {
-            Debug.Log("endNode is NULL for coord: " + to.ToString());
+        if(startNode == null || endNode == null) {
+            return null;
         }
         List<Node> path = null;
         Queue<Node> queue = new Queue<Node>();
@@ -258,6 +267,7 @@ public class GameManager : MonoBehaviour {
         startNode.Parent = null;
         startNode.Depth = 0;
 
+        // iterate over every node once by propagating to neighboring nodes
         while(queue.Count > 0) {
             Node node = queue.Dequeue();
             foreach(Node n in node.Neighbors) {
@@ -273,7 +283,7 @@ public class GameManager : MonoBehaviour {
                 }
             }
         }
-        // Clean the nodes
+        // Clean the nodes before next time
         List<Node> nodes = new List<Node>(gridNodes.Values);
         for(int i=0; i<nodes.Count; i++) {
             nodes[i].Clean();
@@ -282,6 +292,12 @@ public class GameManager : MonoBehaviour {
         return path;
     }
 
+    /// <summary>
+    /// Get the list of all nodes from the first one to the last Parent.
+    /// </summary>
+    /// <param name="node">The starting node.</param>
+    /// <param name="path">The list to with the methode will append the Parent nodes.</param>
+    /// <returns>An empty list if <b>node</b> is null.</returns>
     List<Node> GetParentPath(Node node, List<Node> path = null) {
         if(path == null) { path = new List<Node>(); }
         if(node == null) {
@@ -366,20 +382,19 @@ public class GameManager : MonoBehaviour {
                 neighbors[1].Neighbors[index1] = neighbors[0];
             }
         }
-        // iterate over every non-hallway
-        foreach(Node n in extremityNodes) {
-            
-        }*/
+        // I let this unused code stay because I thought it was pretty smart.*/
     }
 
     void SpawnItems() {
         gridItems = new Dictionary<Vector2Int, Item>();
         GameObject pool = CreatePool("Item Pool");
         if (superPacGumPositions != null) {
+            // spawn superpacgums at specified positions if any
             for(int i = 0; i < superPacGumPositions.Length; i++) {
                 SpawnItem(prefabSuperPacGum, superPacGumPositions[i], pool.transform);
             }
         }
+        // spawn pacgums in remaining empty spaces except where they shouldn't be placed (set in a special tilemap)
         foreach(Vector2Int coord in gridNodes.Keys) {
             if(!gridItems.ContainsKey(coord) && !tilemapIgnoreItem.HasTile((Vector3Int)coord)) {
                 SpawnItem(prefabPacGum, coord, pool.transform);
@@ -398,8 +413,10 @@ public class GameManager : MonoBehaviour {
         Ghosts = new List<Ghost>();
         GameObject pool = CreatePool("Ghost Pool");
         Vector3 bound1 = CellToWorld(ghostSpawnBounds[0]), bound2 = CellToWorld(ghostSpawnBounds[1]);
+        // calculate the pathPoint to leave the spawner
         Vector3 path1 = Vector3.Lerp(bound1, bound2, 0.5f), path2 = path1 + VectorCellToWorld(ghostLeaveSpawnerVector), path3 = CellToWorld(WorldToCell(path2));
         for (int i=0; i<prefabGhosts.Length; i++) {
+            // instantiate ghost at position between the 2 bounds based on the prefabGhost list order
             Ghost ghost = Instantiate(prefabGhosts[i], Vector3.Lerp(bound1, bound2, i / (float)(prefabGhosts.Length - 1)), Quaternion.identity, pool.transform);
             ghost.SetOutOfSpawnerPath(new List<Vector3> { path1, path2, path3 });
             Ghosts.Add(ghost);
@@ -411,30 +428,36 @@ public class GameManager : MonoBehaviour {
         Player = Instantiate(prefabPlayer, spawnPoint, Quaternion.identity);
     }
 
+    /// <summary>
+    /// Gets the gameobject child of this one with specified name or creates a new one.
+    /// </summary>
+    /// <param name="poolName">The gameobject's name to set or to search for.</param>
+    /// <returns>The found or created gameobject.</returns>
     GameObject CreatePool(string poolName) {
         GameObject pool = GameObject.Find(poolName) ?? new GameObject(poolName);
         pool.transform.SetParent(transform);
         return pool;
     }
 
+    /// <summary>
+    /// Place the camera at a position where the maze is at the center of what is left of the screen without the overlay
+    /// </summary>
     void AdaptCamera() {
         Camera mainCam = Camera.main;
-        tilemapWalls.CompressBounds();
+        tilemapWalls.CompressBounds(); // put the bounds at the closest possible size where they can still contain every tile
         BoundsInt bounds = tilemapWalls.cellBounds;
         Vector3 cornerBotLeft = CellToWorld(new Vector2Int(bounds.xMin, bounds.yMin));
         Vector3 cornerTopRight = CellToWorld(new Vector2Int(bounds.xMax, bounds.yMax));
+        // find the center of the maze by lerping at half the position between opposite corners
         Vector3 cameraPos = Vector3.Lerp(cornerBotLeft, cornerTopRight, 0.5f);
         cameraPos.x -= Grid.cellSize.x * 0.5f;
         cameraPos.y -= Grid.cellSize.y * 0.5f;
         cameraPos.z = Camera.main.transform.position.z;
-        //Debug.Log("cornerBotLeft: " + cornerBotLeft + "; cornerTopRight: " + cornerTopRight + "; bounds.size: " + bounds.size);
         mainCam.orthographicSize = bounds.size.y * 0.5f * Grid.cellSize.y;
 
         // ++ adapt maze position with overlay ++ // 
-        float mazeScreenPercent = 0.75f; // percentage of horizontal screen space allowed to the maze 
-        //float mazeHalfWidth = bounds.size.x * 0.5f * Grid.cellSize.x;
+        float mazeScreenPercent = 0.75f; // percentage of horizontal screen space allowed to the maze, (= 1 - overlayWidthPercent)
         cameraPos.x += (1 - mazeScreenPercent) * mainCam.orthographicSize * mainCam.aspect;
-        //cameraPos.y += mainCam.orthographicSize;
 
         mainCam.transform.position = cameraPos;
     }
